@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - equirectangular video panorama</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=yes, minimum-scale=1.0, maximum-scale=5.0">
+		<style>
+			body {
+				background-color: #000000;
+				margin: 0px;
+				overflow: hidden;
+			}
+
+			#info {
+				position: absolute;
+				top: 0px; width: 100%;
+				color: #ffffff;
+				padding: 5px;
+				font-family:Monospace;
+				font-size:13px;
+				font-weight: bold;
+				text-align:center;
+			}
+
+			a {
+				color: #ffffff;
+			}
+		</style>
+	</head>
+	<body>
+
+		<div id="container"></div>
+
+		<script src="three.js"></script>
+
+		<script>
+
+			var camera, scene, renderer, texture, video, hasInit, lastRefresh;
+
+			var texture_placeholder,
+			isUserInteracting = false,
+			onMouseDownMouseX = 0, onMouseDownMouseY = 0,
+			lon = 180, onMouseDownLon = 0,
+			lat = 0, onMouseDownLat = 0,
+			phi = 0, theta = 0,
+			distance = 500;
+
+			var whRate = 2,
+				scale = 1.5;
+
+			var videoWidth, videoHeight;
+			
+			initVideo();
+			init();
+			
+			animate();
+			
+			function initVideo() {
+				video = document.createElement( 'video' );
+				video.width = window.innerWidth;
+				video.height = window.innerHeight;
+				
+				video.loop = true;
+				video.src = './hls/cd02_ld.m3u8';
+
+				video.setAttribute("preload", "metadata");
+
+	var p = video;
+      p.setAttribute('x5-video-player-type', 'h5');
+      p.setAttribute('webkit-playsinline', 'true');
+      p.setAttribute('x-webkit-airplay', 'true');
+      p.setAttribute('playsinline', 'true');
+      p.setAttribute('x5-video-player-fullscreen', "false");
+
+				//video.setAttribute( 'webkit-playsinline', 'webkit-playsinline' );
+				video.addEventListener("loadeddata", init);
+				video.addEventListener("play", animate);
+				video.load();
+			}
+
+			function init() {
+				if (hasInit) return;
+
+				hasInit = true;
+
+				videoWidth = video.width;
+				videoHeight = video.height;
+				//videoWidth = video.videoWidth > video.width ? video.videoWidth : video.width;
+				//videoHeight = video.videoHeight > video.height ? video.videoHeight : video.height;
+
+				var container, mesh;
+
+				container = document.getElementById( 'container' );
+
+				container.addEventListener( 'click', function () {
+					console.log("CLICK");
+
+					video.play();
+
+				} );
+				
+        
+        
+				camera = new THREE.PerspectiveCamera( 45, whRate, 1, 1100 );
+				camera.target = new THREE.Vector3( 0, 0, 0 );
+				camera.zoom = scale;
+				camera.rotation.reorder('YXZ');
+				camera.layers.enable(1);
+				//camera.position.x = (Math.PI / 2);
+
+				scene = new THREE.Scene();
+
+				var geometry = new THREE.SphereBufferGeometry( 500, 64, 44 );
+				geometry.scale( - 1, 1, 1 );
+
+				/*var uv = geometry.getAttribute('uv');
+				for (var i = 0; i < uv.count; i++) {
+					uv.setY (i, 1 - uv.getY (i));
+				}*/
+
+				
+				//video.play();
+
+				texture = new THREE.VideoTexture( video );
+				texture.minFilter = THREE.LinearFilter;
+				texture.format = THREE.RGBAFormat;
+				texture.magFilter = THREE.LinearFilter;
+				texture.generateMipmaps = false;
+				texture.flipY = false;
+
+				//var material   = new THREE.MeshBasicMaterial( { map : texture } );
+
+				var equirect_frag = "uniform sampler2D tEquirect;\nuniform float tFlip;\nvarying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvec3 direction = normalize( vWorldPosition );\n\tvec2 sampleUV;\n\tsampleUV.y = saturate( tFlip * direction.y * -0.5 + 0.5 );\n\tsampleUV.x = atan( direction.z, direction.x ) * RECIPROCAL_PI2 + 0.5;\n\tgl_FragColor = texture2D( tEquirect, sampleUV ).bgra;\n}\n";
+
+				var equirect_vert = "varying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvWorldPosition = transformDirection( position, modelMatrix );\n\t#include <begin_vertex>\n\t#include <project_vertex>\n}\n";
+
+
+
+
+				var uniforms =  {
+					tEquirect: { value: texture },
+					tFlip: { value: 1 }
+				};
+
+				
+
+				var material = new THREE.ShaderMaterial( {
+					uniforms: uniforms,
+					vertexShader: equirect_vert,
+					fragmentShader: equirect_frag
+				});
+
+				mesh = new THREE.Mesh( geometry, material );
+
+				scene.add( mesh );
+
+				renderer = new THREE.WebGLRenderer();
+				renderer.setPixelRatio( window.devicePixelRatio );
+				
+				//renderer.setSize( window.innerWidth, window.innerHeight );
+				container.appendChild( renderer.domElement );
+
+				document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+				document.addEventListener( 'mouseup', onDocumentMouseUp, false );
+				document.addEventListener( 'wheel', onDocumentMouseWheel, false );
+
+				//
+
+				//window.addEventListener( 'resize', onWindowResize, false );
+				onVideoResize();
+			}
+
+			function onVideoResize() {
+
+				camera.aspect = whRate; //videoWidth / videoHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( videoWidth , videoHeight);
+
+			}
+
+
+
+			function onWindowResize() {
+
+				camera.aspect = whRate; //window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			function onDocumentMouseDown( event ) {
+
+				event.preventDefault();
+
+				isUserInteracting = true;
+
+				onPointerDownPointerX = event.clientX;
+				onPointerDownPointerY = event.clientY;
+
+				onPointerDownLon = lon;
+				onPointerDownLat = lat;
+
+			}
+
+			function onDocumentMouseMove( event ) {
+
+				if ( isUserInteracting === true ) {
+
+					lon = ( onPointerDownPointerX - event.clientX ) * 0.1 + onPointerDownLon;
+					lat = ( event.clientY - onPointerDownPointerY ) * 0.1 + onPointerDownLat;
+
+				}
+
+			}
+
+			function onDocumentMouseUp( event ) {
+
+				isUserInteracting = false;
+
+			}
+
+			function onDocumentMouseWheel( event ) {
+
+				distance += event.deltaY * 0.05;
+
+			}
+
+			function animate() {
+				requestAnimationFrame( animate );
+				update();
+
+			}
+
+      function updateTexture() {
+        var now = new Date().getTime();
+
+        if (now - lastRefresh >= 30) {
+
+            lastRefresh = now;
+
+            texture.needsUpdate = true;
+        }
+      }
+
+			function update() {
+				updateTexture();
+
+
+				//texture.needsUpdate = true;
+
+				lat = Math.max( - 85, Math.min( 85, lat ) );
+				phi = THREE.Math.degToRad( 90 - lat );
+				theta = THREE.Math.degToRad( lon );
+
+				camera.position.x = distance * Math.sin( phi ) * Math.cos( theta );
+				camera.position.y = distance * Math.cos( phi );
+				camera.position.z = distance * Math.sin( phi ) * Math.sin( theta );
+
+				camera.lookAt( camera.target );
+
+				/*
+				// distortion
+				camera.position.copy( camera.target ).negate();
+				*/
+
+				renderer.render( scene, camera );
+
+			}
+
+		</script>
+	</body>
+</html>
