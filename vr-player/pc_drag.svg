@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="101px" height="72px" viewBox="0 0 101 72" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 40.3 (33839) - http://www.bohemiancoding.com/sketch -->
+    <title>click and drag</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <rect id="path-1" x="-8.17124146e-14" y="-1.0658141e-14" width="40" height="56" rx="20"></rect>
+        <mask id="mask-2" maskContentUnits="userSpaceOnUse" maskUnits="objectBoundingBox" x="0" y="0" width="40" height="56" fill="white">
+            <use xlink:href="#path-1"></use>
+        </mask>
+        <rect id="path-3" x="-6.39488462e-14" y="3.55271368e-14" width="40" height="56" rx="20"></rect>
+        <mask id="mask-4" maskContentUnits="userSpaceOnUse" maskUnits="objectBoundingBox" x="0" y="0" width="40" height="56" fill="white">
+            <use xlink:href="#path-3"></use>
+        </mask>
+    </defs>
+    <g id="Symbols" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="click-and-drag">
+            <g id="Group-23" transform="translate(-5.000000, 2.000000)">
+                <g id="Group-16" transform="translate(18.000000, 7.000000)">
+                    <g id="Group-13" transform="translate(31.941125, 34.941125) rotate(-30.000000) translate(-31.941125, -34.941125) translate(11.941125, 6.941125)">
+                        <use id="Rectangle-7" stroke="#FFFFFF" mask="url(#mask-2)" stroke-width="4" xlink:href="#path-1"></use>
+                        <path d="M19,0.0245545965 C8.4167153,0.545477931 3.55271368e-14,9.28949429 3.55271368e-14,19.9998593 L3.55271368e-14,21 L19,21 L19,0.0245545965 Z" id="Combined-Shape" fill-opacity="0.5" fill="#FFFFFF"></path>
+                        <rect id="Rectangle-8" fill="#FFFFFF" x="-8.17124146e-14" y="21" width="40" height="2"></rect>
+                        <rect id="Rectangle-8" fill="#FFFFFF" x="19" y="1" width="2" height="22"></rect>
+                    </g>
+                    <g id="Group-13-Copy" opacity="0.3" transform="translate(45.320508, 35.248711) rotate(30.000000) translate(-45.320508, -35.248711) translate(25.320508, 7.248711)">
+                        <use id="Rectangle-7" stroke="#FFFFFF" mask="url(#mask-4)" stroke-width="4" xlink:href="#path-3"></use>
+                        <rect id="Rectangle-8" fill="#FFFFFF" x="-8.52651283e-14" y="21" width="40" height="2"></rect>
+                        <rect id="Rectangle-8" fill="#FFFFFF" x="19" y="1" width="2" height="22"></rect>
+                    </g>
+                </g>
+                <g id="Group-21" stroke-linecap="round" stroke="#FFFFFF" stroke-width="2" stroke-linejoin="round">
+                    <g id="Group-20" transform="translate(84.000000, 0.000000)">
+                        <path d="M16.8942463,19.221271 C13.0934325,11.3888078 7.22568991,4.74539023 0,5.68434189e-14" id="Oval-6"></path>
+                        <g id="Group-15" transform="translate(16.500000, 17.500000) rotate(90.000000) translate(-16.500000, -17.500000) translate(6.000000, 7.000000)">
+                            <g id="arrow" transform="translate(10.414034, 10.588359) scale(-1, 1) rotate(70.000000) translate(-10.414034, -10.588359) translate(2.414034, 3.088359)">
+                                <g id="Group-14" transform="translate(8.000000, 7.500000) rotate(-45.000000) translate(-8.000000, -7.500000) translate(4.000000, 1.000000)">
+                                    <path d="M0.99609375,7.00097656 L7.00128174,13" id="Path-3-Copy"></path>
+                                    <path d="M1,7 L7,0.99609375" id="Path-3-Copy-2" transform="translate(4.000000, 3.998047) scale(-1, -1) translate(-4.000000, -3.998047) "></path>
+                                </g>
+                            </g>
+                        </g>
+                    </g>
+                    <g id="Group-20" transform="translate(13.500000, 14.000000) scale(-1, 1) translate(-13.500000, -14.000000) ">
+                        <path d="M16.8942463,19.221271 C13.0934325,11.3888078 7.22568991,4.74539023 0,5.68434189e-14" id="Oval-6"></path>
+                        <g id="Group-15" transform="translate(16.500000, 17.500000) rotate(90.000000) translate(-16.500000, -17.500000) translate(6.000000, 7.000000)">
+                            <g id="arrow" transform="translate(10.414034, 10.588359) scale(-1, 1) rotate(70.000000) translate(-10.414034, -10.588359) translate(2.414034, 3.088359)">
+                                <g id="Group-14" transform="translate(8.000000, 7.500000) rotate(-45.000000) translate(-8.000000, -7.500000) translate(4.000000, 1.000000)">
+                                    <path d="M0.99609375,7.00097656 L7.00128174,13" id="Path-3-Copy"></path>
+                                    <path d="M1,7 L7,0.99609375" id="Path-3-Copy-2" transform="translate(4.000000, 3.998047) scale(-1, -1) translate(-4.000000, -3.998047) "></path>
+                                </g>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

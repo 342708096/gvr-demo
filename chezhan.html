@@ -1,0 +1,251 @@
+<html class="">
+<head>
+    <title>VeeR VR Player</title>
+
+    <meta charset="utf-8">
+    <meta name="x5-fullscreen" content="true">
+    <meta name="full-screen" content="yes">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-touch-fullscreen" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+
+    <link href="vr-player/player.css" rel="stylesheet">
+
+    <!-- Fragment shader program -->
+    <script id="shader-fs" type="x-shader/x-fragment">
+  varying mediump vec3 vDirection;
+  uniform mediump float eye;
+  uniform mediump float projection;
+  uniform mediump float hfov;
+  uniform mediump float vfov;
+
+  uniform sampler2D uSampler;
+
+  #define PI 3.1415926535897932384626433832795
+
+  mediump vec4 directionToColor(mediump vec3 direction, mediump float eye, mediump float projection) {
+    /*
+    * Input: a direction.  +x = right, +y = up, +z = backward.
+    *        an eye. left = 0, right = 1.
+    *        a projection. see ProjectionEnum in JS file for enum
+    * Output: a color from the video
+    *
+    * Bug alert: the control flow here may screw up texture filtering.
+    */
+
+    mediump float theta = atan(direction.x, -1.0 * direction.z);
+    mediump float phi = atan(direction.y, length(direction.xz));
+
+    mediump vec2 loc;
+
+    mediump float h = (hfov / 360.0) * 2.0 * PI;
+    mediump float v = (vfov / 180.0) * PI;
+
+    mediump float hsep = (2.0 * PI - h) / 2.0;
+    mediump float vsep = v / 2.0;
+
+    if (hsep != 0.0 && (theta > 0.0 && theta < hsep || theta > -hsep && theta <= 0.0)) {
+      return vec4(0,0,0,1);
+    }
+
+    if (vsep != 0.0 && (phi > vsep || phi < -vsep)) {
+      return vec4(0,0,0,1);
+    }
+    /*
+    * The Nexus 7 and the Moto X (and possibly many others) have
+    * a buggy atan2 implementation that screws up when the numerator
+    * (the first argument) is too close to zero.  (The 1e-4 is carefully
+    * chosen: 1e-5 doesn't fix the problem.
+    */
+    if (abs(direction.x) < 1e-4 * abs(direction.z))
+    theta = 0.5*PI * (1.0 - sign(-1.0 * direction.z));
+    if (abs(direction.y) < 1e-4 * length(direction.xz))
+    phi = 0.0;
+
+    // Uncomment to debug the transformations.
+    // return vec4(theta / (2. * PI) + 0.5, phi / (2. * PI) + 0.5, 0., 0.);
+
+
+    phi += vsep;
+    // 有内容区域坐标映射到texture坐标
+    if (projection == 0.) {
+      if (theta < 0.0) {
+        theta += hsep;
+      } else {
+        theta -= hsep;
+      }
+      // Projection == 0: equirectangular projection
+      loc = vec2(mod(theta / h, 1.0), phi / v);
+    } else if (projection == 1.) {
+      // Projection == 1: equirectangular top/bottom 3D projection
+      eye = 1. - eye;
+      loc = vec2(mod(theta / h, 1.0), (phi / v + eye)/ 2.);
+    } else {
+      if (theta < 0.0) {
+        theta -= (h - hsep);
+      } else {
+        theta -= hsep;
+      }
+      /* theta -= hsep;*/
+      eye = 1. - eye;
+      // Projection == 2: equirectangular left/right 3D projection
+      loc = vec2(mod((theta / h + eye) / 2., 1.0), phi / v);
+    }
+
+    return texture2D(uSampler, loc);
+  }
+
+  void main(void) {
+    gl_FragColor = directionToColor(vDirection, eye, projection);
+  }
+</script>
+
+    <!-- Vertex shader program -->
+    <script id="shader-vs" type="x-shader/x-vertex">
+  attribute mediump vec2 aVertexPosition;
+
+  uniform mediump mat4 proj_inv;
+
+  varying mediump vec3 vDirection;
+
+  uniform int rotateFlag;
+
+  void main(void) {
+    gl_Position = vec4(aVertexPosition, 1.0, 1.0);
+    mediump vec4 projective_direction = proj_inv * gl_Position;
+    if (rotateFlag == 1) {
+      vDirection = projective_direction.yxz / projective_direction.w;
+    } else {
+      vDirection = projective_direction.xyz / projective_direction.w;
+    }
+  }
+</script>
+</head>
+<body marginwidth="0" marginheight="0" version="pc" lang="zh-CN">
+<div id="video-container" style="width: 1034px; height: 529px;">
+    <div id="overlay" class="overlay hide"></div>
+    <img id="poster" class="poster"></img>
+    <span id="playPauseBtn" class="center-play-toggle play hidden hide hide-pc">
+    </span>
+    <div id="loading" class="loading">
+      <span class="loading-dot">
+        <i></i>
+        <i></i>
+        <i></i>
+        <i></i>
+      </span>
+    </div>
+    <div class="hint pc hide-mobile">
+        <div class="pc-drag"></div>
+        <div class="text">
+        </div>
+    </div>
+    <div class="hint mobile hide-pc">
+        <div class="title">
+        </div>
+        <div class="items">
+            <div class="rotate item">
+                <div class="mobile-rotate"></div>
+                <div class="rotate-text text">
+                </div>
+            </div>
+            <span class="separate">
+        </span>
+            <div class="drag item">
+                <div class="mobile-drag"></div>
+                <div class="drag-text text">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="portrailLock" class="portrail-lock mobile hide-pc hide">
+        <div class="title"></div>
+        <div class="tip-img"></div>
+    </div>
+
+    <canvas id="glcanvas">
+        Your browser doesn't appear to support the HTML5 <code>&lt;canvas&gt;</code> element.
+    </canvas>
+    <video id="video" webkit-playsinline="true" x5-video-player-type="h5" x5-video-player-fullscreen="true" playsinline="true" crossorigin="anonymous" preload="auto" class="hide">
+        <source src="./mp4/chezhan.mp4" type="video/mp4">
+    </video>
+    <!-- Video Controls -->
+    <div id="mobileControl" class="hidden hide hide-pc">
+        <div class="left-group">
+            <span class="cur-time"></span>
+            <div class="seek-bar">
+                <div class="progress-box">
+                    <span class="progress-thumb"></span>
+                </div>
+            </div>
+            <span class="total-time"></span>
+        </div>
+
+        <div id="openVRBtn" class="vr-toggle open"></div>
+    </div>
+
+    <div id="pcControl" class="hide-mobile hide">
+        <div class="seek-bar">
+            <div class="progress-box">
+                <span class="progress-thumb"></span>
+            </div>
+        </div>
+        <div class="menus">
+            <div class="left-group">
+                <div class="play-toggle pc play"></div>
+                <div class="time-container">
+                    <span class="cur-time"></span>
+                    /
+                    <span class="total-time"></span>
+                </div>
+            </div>
+
+            <div class="right-group">
+                <div class="vr-toggle open"></div>
+                <div class="fullscreen-toggle expand"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.settings = {
+        "autoplay": true,
+        "controls": true,
+        "loop": true,
+        "sound": true,
+        "projection": 0,
+        "overlay": false,
+        "lang": "zh-CN",
+        "vrmode": true,
+        "fullscreen": true,
+        "hfov": 360,
+        "vfov": 180,
+        "video": "./mp4/chezhan.mp4",
+        "isMobile": false,
+        "monitor": {
+            "property_key": "823da4b511ba3b53f513c6f21",
+            "page_type": "watchpage",
+            "viewer_user_id": "visitor",
+            "video_id": 28108,
+            "video_title": "2017烟台春季车展-VR看豪车，VR看车模，尽在2017烟台春季车展",
+            "video_content_type": "short",
+            "video_duration": 99966.7,
+            "video_stream_type": "on-demand",
+            "video_producer": 679491,
+            "video_cdn": "qvcdn.veervr.tv"
+        }
+    };
+</script>
+<!--<script src="vr-player/video.js"></script>-->
+<!--<script src="vr-player/videojs-live.js"></script>-->
+<script src="vr-player/player.js"></script>
+
+
+
+
+</body></html>

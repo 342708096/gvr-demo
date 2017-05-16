@@ -1,0 +1,487 @@
+body {
+    background-color: #000;
+    font-family: PingFang SC, Avenir, ST Heiti, Hiragino Sans GB, Microsoft YaHei, sans-serif;
+    font-weight: 300;
+    font-size: 14px;
+    color: #fff;
+    margin: 0;
+    padding: 0;
+    overflow: hidden
+}
+
+.overlay {
+    background: rgba(0, 0, 0, .3);
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1
+}
+
+.hidden {
+    opacity: 0;
+    pointer-events: none;
+    -webkit-transition: opacity .5s;
+    transition: opacity .5s
+}
+
+.hide {
+    display: none !important
+}
+
+.show {
+    opacity: 1
+}
+
+#glcanvas {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0
+}
+
+.play-toggle.play {
+    background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+Cjxzdmcgdmlld0JveD0iMCAwIDE2IDE2IiB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPgogICAgPCEtLSBHZW5lcmF0b3I6IFNrZXRjaCA0MCAoMzM3NjIpIC0gaHR0cDovL3d3dy5ib2hlbWlhbmNvZGluZy5jb20vc2tldGNoIC0tPgogICAgPHRpdGxlPmljb24vcGxheTwvdGl0bGU+CiAgICA8ZGVzYz5DcmVhdGVkIHdpdGggU2tldGNoLjwvZGVzYz4KICAgIDxkZWZzPjwvZGVmcz4KICAgIDxnIGlkPSJTeW1ib2xzIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMSIgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIiBzdHJva2UtbGluZWNhcD0icm91bmQiIG9wYWNpdHk9IjAuOSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+CiAgICAgICAgPGcgaWQ9Imljb24vcGxheSIgc3Ryb2tlPSIjRkZGRkZGIiBzdHJva2Utd2lkdGg9IjIiIGZpbGw9IiNGRkZGRkYiPgogICAgICAgICAgICA8cG9seWdvbiBpZD0iUGF0aC0xMyIgcG9pbnRzPSIxIDEgMSAxNSAxNSA4LjAwMDU2OTY2Ij48L3BvbHlnb24+CiAgICAgICAgPC9nPgogICAgPC9nPgo8L3N2Zz4K)
+}
+
+.play-toggle.pause {
+    background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+Cjxzdmcgd2lkdGg9IjE2cHgiIGhlaWdodD0iMTZweCIgdmlld0JveD0iMCAwIDE2IDE2IiB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPgogICAgPCEtLSBHZW5lcmF0b3I6IFNrZXRjaCA0MCAoMzM3NjIpIC0gaHR0cDovL3d3dy5ib2hlbWlhbmNvZGluZy5jb20vc2tldGNoIC0tPgogICAgPHRpdGxlPmljb24vcGF1c2U8L3RpdGxlPgogICAgPGRlc2M+Q3JlYXRlZCB3aXRoIFNrZXRjaC48L2Rlc2M+CiAgICA8ZGVmcz48L2RlZnM+CiAgICA8ZyBpZD0iU3ltYm9scyIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCIgb3BhY2l0eT0iMC45Ij4KICAgICAgICA8ZyBpZD0iaWNvbi9wYXVzZSIgZmlsbD0iI0ZGRkZGRiI+CiAgICAgICAgICAgIDxnIGlkPSJHcm91cC0xNSIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMi4wMDAwMDAsIDAuMDAwMDAwKSI+CiAgICAgICAgICAgICAgICA8cmVjdCBpZD0iUmVjdGFuZ2xlLTUiIHg9IjAiIHk9IjAiIHdpZHRoPSI0IiBoZWlnaHQ9IjE2IiByeD0iMSI+PC9yZWN0PgogICAgICAgICAgICAgICAgPHJlY3QgaWQ9IlJlY3RhbmdsZS01LUNvcHkiIHg9IjgiIHk9IjAiIHdpZHRoPSI0IiBoZWlnaHQ9IjE2IiByeD0iMSI+PC9yZWN0PgogICAgICAgICAgICA8L2c+CiAgICAgICAgPC9nPgogICAgPC9nPgo8L3N2Zz4=)
+}
+
+.vr-toggle {
+    background-repeat: no-repeat
+}
+
+.vr-toggle.open {
+    background-image: url(./cardboard.svg)
+}
+
+.vr-toggle.close {
+    background-image: url(./exitVR.svg)
+}
+
+.fullscreen-toggle.expand {
+    background-image: url(./expand.svg)
+}
+
+.fullscreen-toggle.shrink {
+    background-image: url(./shrink.svg)
+}
+
+.seek-bar {
+    height: 4px;
+    border: none;
+    border-radius: 4px;
+    background: #fff;
+    cursor: pointer
+}
+
+.seek-bar .progress-box {
+    background: #22e7b3;
+    height: 4px;
+    border-radius: 4px;
+    width: 0;
+    position: relative
+}
+
+.seek-bar .progress-thumb {
+    border: none;
+    height: 16px;
+    width: 16px;
+    border-radius: 50%;
+    background: #22e7b3;
+    margin-top: -6px;
+    display: block;
+    position: absolute;
+    right: -14px;
+    cursor: pointer
+}
+
+.hint, .portrail-lock {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -ms-flex-direction: column;
+    flex-direction: column
+}
+
+.hint, .loading, .portrail-lock {
+    background-color: rgba(0, 0, 0, .8);
+    border-radius: 10px;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 1
+}
+
+.loading {
+    color: #fff;
+    vertical-align: middle;
+    text-align: center;
+    -webkit-transition: -webkit-transform .3s cubic-bezier(.78, .14, .15, .86);
+    transition: -webkit-transform .3s cubic-bezier(.78, .14, .15, .86);
+    transition: transform .3s cubic-bezier(.78, .14, .15, .86);
+    transition: transform .3s cubic-bezier(.78, .14, .15, .86), -webkit-transform .3s cubic-bezier(.78, .14, .15, .86);
+    font-size: 12px;
+    display: none;
+    opacity: 1;
+    width: 96px;
+    height: 96px;
+    margin-left: -48px;
+    margin-top: -48px;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex
+}
+
+.loading .loading-dot {
+    position: relative;
+    display: block;
+    width: 32px;
+    height: 32px;
+    -webkit-transform: rotate(45deg);
+    transform: rotate(45deg);
+    -webkit-animation: antRotate 1.2s infinite linear;
+    animation: antRotate 1.2s infinite linear
+}
+
+.loading .loading-dot i {
+    width: 14px;
+    height: 14px;
+    border-radius: 100%;
+    background-color: #fff;
+    -webkit-transform: scale(.75);
+    transform: scale(.75);
+    display: block;
+    position: absolute;
+    opacity: .3;
+    -webkit-animation: antSpinMove 1s infinite linear alternate;
+    animation: antSpinMove 1s infinite linear alternate;
+    -webkit-transform-origin: 50% 50%;
+    transform-origin: 50% 50%
+}
+
+.loading .loading-dot i:first-child {
+    left: 0;
+    top: 0
+}
+
+.loading .loading-dot i:nth-child(2) {
+    right: 0;
+    top: 0;
+    -webkit-animation-delay: .4s;
+    animation-delay: .4s
+}
+
+.loading .loading-dot i:nth-child(3) {
+    right: 0;
+    bottom: 0;
+    -webkit-animation-delay: .8s;
+    animation-delay: .8s
+}
+
+.loading .loading-dot i:nth-child(4) {
+    left: 0;
+    bottom: 0;
+    -webkit-animation-delay: 1.2s;
+    animation-delay: 1.2s
+}
+
+@-webkit-keyframes antRotate {
+    to {
+        -webkit-transform: rotate(405deg);
+        transform: rotate(405deg)
+    }
+}
+
+@keyframes antRotate {
+    to {
+        -webkit-transform: rotate(405deg);
+        transform: rotate(405deg)
+    }
+}
+
+@-webkit-keyframes antSpinMove {
+    to {
+        -webkit-transform: scale(1);
+        transform: scale(1);
+        opacity: 1
+    }
+}
+
+@keyframes antSpinMove {
+    to {
+        -webkit-transform: scale(1);
+        transform: scale(1);
+        opacity: 1
+    }
+}
+
+.poster {
+    -o-object-fit: cover;
+    object-fit: cover;
+    width: 100%;
+    height: 100%
+}
+
+body[version=pc] #glcanvas {
+    cursor: move;
+    cursor: grab;
+    cursor: -webkit-grab
+}
+
+body[version=pc] #glcanvas:active {
+    cursor: grabbing;
+    cursor: -webkit-grabbing
+}
+
+body[version=pc] .hide-pc {
+    display: none !important
+}
+
+body[version=pc] .show-pc {
+    display: block !important
+}
+
+body[version=pc] #pcControl {
+    position: fixed;
+    background: -webkit-linear-gradient(transparent, rgba(0, 0, 0, .5));
+    background: linear-gradient(transparent, rgba(0, 0, 0, .5));
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0 16px;
+    height: 64px;
+    z-index: 2147483647;
+    cursor: pointer
+}
+
+body[version=pc] #pcControl .seek-bar {
+    margin-top: 20px;
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0
+}
+
+body[version=pc] #pcControl .menus {
+    margin-top: 8px;
+    -webkit-box-pack: justify;
+    -ms-flex-pack: justify;
+    justify-content: space-between;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center
+}
+
+body[version=pc] #pcControl .menus, body[version=pc] #pcControl .menus .left-group {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex
+}
+
+body[version=pc] #pcControl .menus .left-group .play-toggle {
+    width: 14px;
+    height: 14px;
+    margin-right: 13px
+}
+
+body[version=pc] #pcControl .menus .left-group .time-container {
+    font-size: 12px;
+    font-weight: 500
+}
+
+body[version=pc] #pcControl .menus .right-group {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex
+}
+
+body[version=pc] #pcControl .menus .right-group .vr-toggle {
+    width: 19px;
+    height: 14px;
+    margin-right: 20px
+}
+
+body[version=pc] #pcControl .menus .right-group .fullscreen-toggle {
+    width: 14px;
+    height: 14px
+}
+
+body[version=pc] .hint.pc {
+    width: 256px;
+    height: 160px;
+    margin-top: -80px;
+    margin-left: -128px
+}
+
+body[version=pc] .hint.pc .pc-drag {
+    background-repeat: no-repeat;
+    background-image: url(./pc_drag.svg);
+    width: 101px;
+    height: 72px
+}
+
+body[version=pc] .hint.pc .text {
+    margin-top: 11px
+}
+
+body[version=mobile] .show-mobile {
+    display: block !important
+}
+
+body[version=mobile] .hide-mobile {
+    display: none !important
+}
+
+body[version=mobile] #mobileControl {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0 16px;
+    height: 64px;
+    -webkit-box-pack: justify;
+    -ms-flex-pack: justify;
+    justify-content: space-between;
+    background: -webkit-linear-gradient(transparent, rgba(0, 0, 0, .5));
+    background: linear-gradient(transparent, rgba(0, 0, 0, .5))
+}
+
+body[version=mobile] #mobileControl, body[version=mobile] #mobileControl .left-group {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center
+}
+
+body[version=mobile] #mobileControl .left-group {
+    -webkit-box-flex: 1;
+    -ms-flex: 1;
+    flex: 1
+}
+
+body[version=mobile] #mobileControl .left-group .seek-bar {
+    width: calc(100% - 120px);
+    margin-left: 10px;
+    margin-right: 10px
+}
+
+body[version=mobile] #mobileControl .vr-toggle {
+    display: inline-block;
+    float: right;
+    width: 30px;
+    height: 20px
+}
+
+body[version=mobile] .center-play-toggle {
+    width: 64px;
+    height: 64px;
+    position: absolute;
+    top: 50%;
+    margin-top: -32px;
+    left: 50%;
+    margin-left: -32px;
+    z-index: 1
+}
+
+body[version=mobile] .center-play-toggle.play {
+    background-image: url(./play.svg)
+}
+
+body[version=mobile] .center-play-toggle.pause {
+    background-image: url(./pause.svg)
+}
+
+body[version=mobile] .hint.mobile {
+    width: 296px;
+    height: 186px;
+    margin-top: -93px;
+    margin-left: -148px
+}
+
+body[version=mobile] .hint.mobile .title {
+    margin-bottom: 23px;
+    font-size: 18px;
+    font-weight: 500
+}
+
+body[version=mobile] .hint.mobile .separate {
+    margin: 0 14px;
+    font-size: 18px;
+    font-weight: 500
+}
+
+body[version=mobile] .hint.mobile .items, body[version=mobile] .hint.mobile .items .item {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center
+}
+
+body[version=mobile] .hint.mobile .items .item {
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center
+}
+
+body[version=mobile] .hint.mobile .items .item .text {
+    margin-top: 8px
+}
+
+body[version=mobile] .hint.mobile .items .mobile-rotate {
+    background-image: url(./rotate.svg);
+    width: 72px;
+    height: 56px
+}
+
+body[version=mobile] .hint.mobile .items .mobile-drag {
+    width: 72px;
+    height: 56px;
+    background-image: url(./drag.svg)
+}
+
+body[version=mobile] .portrail-lock {
+    width: 296px;
+    height: 186px;
+    margin-top: -93px;
+    margin-left: -148px
+}
+
+body[version=mobile] .portrail-lock .title {
+    margin-bottom: 23px;
+    font-size: 18px;
+    font-weight: 500
+}
+
+body[version=mobile] .portrail-lock .tip-img {
+    width: 196px;
+    height: 88px;
+    background-size: cover
+}
+
+body[lang=zh-CN] .portrail-lock .tip-img {
+    background-image: url(https://assets.veervr.tv/www-app/vendor/vr-player/images/orientation_lock_cn_8bdd57e7edda795f558abee9ef8b8d5d.png)
+}
+
+body[lang=en] .portrail-lock .tip-img {
+    background-image: url(https://assets.veervr.tv/www-app/vendor/vr-player/images/orientation_lock_en_6a498648e53c2c2d14815fb9c7b472bf.png)
+}

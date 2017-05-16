@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 40 (33762) - http://www.bohemiancoding.com/sketch -->
+    <title>icon/shrink</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Symbols" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" stroke-linecap="round" opacity="0.9" stroke-linejoin="round">
+        <g id="icon/shrink" stroke="#FFFFFF" stroke-width="2">
+            <g id="icon/expand-copy">
+                <g id="Group-8">
+                    <g id="Group-13" transform="translate(4.500000, 4.500000) scale(-1, -1) translate(-4.500000, -4.500000) ">
+                        <path d="M2.77144681,5.98168553 L8.83601323,5.83426236" id="Path-3" transform="translate(5.803730, 5.907974) rotate(45.000000) translate(-5.803730, -5.907974) "></path>
+                        <path d="M1.23223305,3.73223305 L4.76776695,7.26776695" id="Path-3-Copy" transform="translate(3.000000, 5.500000) rotate(45.000000) translate(-3.000000, -5.500000) "></path>
+                        <path d="M3.73223307,4.76776688 L7.26776678,1.23223299" id="Path-3-Copy-2" transform="translate(5.500000, 3.000000) rotate(45.000000) translate(-5.500000, -3.000000) "></path>
+                    </g>
+                    <g id="Group-14" transform="translate(11.500000, 11.500000) scale(-1, -1) translate(-11.500000, -11.500000) translate(7.000000, 7.000000)">
+                        <path d="M0.163986772,3.16573764 L6.22855319,3.01831447" id="Path-3" transform="translate(3.196270, 3.092026) scale(-1, -1) rotate(45.000000) translate(-3.196270, -3.092026) "></path>
+                        <path d="M4.23223305,1.73223305 L7.76776695,5.26776695" id="Path-3-Copy" transform="translate(6.000000, 3.500000) scale(-1, -1) rotate(45.000000) translate(-6.000000, -3.500000) "></path>
+                        <path d="M1.73223322,7.76776701 L5.26776693,4.23223312" id="Path-3-Copy-2" transform="translate(3.500000, 6.000000) scale(-1, -1) rotate(45.000000) translate(-3.500000, -6.000000) "></path>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

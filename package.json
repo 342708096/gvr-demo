@@ -1,0 +1,16 @@
+{
+  "name": "gvrh5",
+  "description": "gvrh5 demo",
+  "version": "1.0.0",
+  "repository": "git@http://gvrcraft.com:8080/git/gvrh5.git",
+  "dependencies": {
+    "three": "^0.85.2",
+    "videojs-contrib-hls": "^5.5.2"
+  },
+  "devDependencies": {
+    "http-server": "^0.10.0"
+  },
+  "scripts": {
+    "start": "http-server -a 0.0.0.0 -p 9000"
+  }
+}
