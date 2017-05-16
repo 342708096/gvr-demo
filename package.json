@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "repository": "git@http://gvrcraft.com:8080/git/gvrh5.git",
   "dependencies": {
+    "hls.js": "^0.7.7",
     "three": "^0.85.2",
     "videojs-contrib-hls": "^5.5.2"
   },

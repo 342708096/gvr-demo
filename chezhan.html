@@ -139,7 +139,7 @@
         <i></i>
       </span>
     </div>
-    <div class="hint pc hide-mobile">
+    <div class="hint pc hide-mobile hide">
         <div class="pc-drag"></div>
         <div class="text">
         </div>
@@ -171,7 +171,7 @@
         Your browser doesn't appear to support the HTML5 <code>&lt;canvas&gt;</code> element.
     </canvas>
     <video id="video" webkit-playsinline="true" x5-video-player-type="h5" x5-video-player-fullscreen="true" playsinline="true" crossorigin="anonymous" preload="auto" class="hide">
-        <source src="./mp4/chezhan.mp4" type="video/mp4">
+        <!--<source src="./mp4/chezhan.mp4" type="video/mp4">-->
     </video>
     <!-- Video Controls -->
     <div id="mobileControl" class="hidden hide hide-pc">
@@ -211,7 +211,8 @@
         </div>
     </div>
 </div>
-
+<script src="node_modules/hls.js/dist/hls.js"></script>
+<script src="node_modules/hls.js/dist/hls.light.js"></script>
 <script>
     window.settings = {
         "autoplay": true,
@@ -225,7 +226,7 @@
         "fullscreen": true,
         "hfov": 360,
         "vfov": 180,
-        "video": "./mp4/chezhan.mp4",
+        "video": "./hls/cd02_ld.m3u8",
         "isMobile": false,
         "monitor": {
             "property_key": "823da4b511ba3b53f513c6f21",
@@ -240,6 +241,15 @@
             "video_cdn": "qvcdn.veervr.tv"
         }
     };
+    if(Hls.isSupported()) {
+        var video = document.getElementById('video');
+        var hls = new Hls();
+        hls.loadSource('./hls/cd02_ld.m3u8');
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED,function() {
+//            document.body.appendChild(document.createElement('<script src="vr-player/player.js">'));
+        });
+    }
 </script>
 <!--<script src="vr-player/video.js"></script>-->
 <!--<script src="vr-player/videojs-live.js"></script>-->
