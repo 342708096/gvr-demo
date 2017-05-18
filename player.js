@@ -1,6 +1,7 @@
 class Player {
     constructor(src) {
         this.lastRefresh = 0;
+        this.deg = 45;
         // initialize video
         const video = this.video = document.createElement('video');
         Object.assign(this.video, {
@@ -111,7 +112,18 @@ class Player {
     }
 
     animate () {
-        requestAnimationFrame( this.render.bind(this) );
+        requestAnimationFrame( this.animate.bind(this) );
+        const now = new Date().getTime();
+        if (now - this.lastRefresh >= 100) {
+            this.lastRefresh = now;
+            this.deg ++;
+            if (this.deg > 360) {
+                this.deg = 0;
+            }
+            this.updateCameraPositionByDeg(this.deg, 0);
+        }else{
+            this.render();
+        }
     }
 
 }
