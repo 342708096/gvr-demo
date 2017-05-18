@@ -1,0 +1,21 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="application/javascript" src="vr-view/vrview.js"></script>
+</head>
+<body>
+<div id="vrview"></div>
+<script>
+    window.addEventListener('load', onVrViewLoad);
+    function onVrViewLoad() {
+        var vrView = new VRView.Player('body', {
+            video: './mp4/chezhan.mp4',
+            width: '100%',
+            height: window.innerHeight,
+            is_stereo: true
+        });
+    }
+</script>
+</body>
+</html>

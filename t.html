@@ -60,7 +60,7 @@
                 video.height = window.innerHeight;
 
                 video.loop = true;
-                video.src = './hls/cd02_ld.m3u8';
+                video.src = './mp4/chezhan.mp4';
                 video.setAttribute("preload", "metadata");
 
 	var p = video;
@@ -90,11 +90,11 @@
 
 				container = document.getElementById( 'container' );
 
-				container.addEventListener( 'click', function () {
+				container.addEventListener( 'click', function play () {
 					console.log("CLICK");
 
 					video.play();
-
+					container.removeEventListener('click', play)
 				} );
 				
         
