@@ -163,6 +163,9 @@
 				document.addEventListener( 'mouseup', onDocumentMouseUp, false );
 				document.addEventListener( 'wheel', onDocumentMouseWheel, false );
 
+                document.addEventListener( 'touchstart', onDocumentMouseDown, false );
+                document.addEventListener( 'touchmove', onDocumentMouseMove, false );
+                document.addEventListener( 'touchend', onDocumentMouseUp, false );
 				//
 
 				//window.addEventListener( 'resize', onWindowResize, false );
