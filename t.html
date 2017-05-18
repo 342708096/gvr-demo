@@ -28,19 +28,10 @@
 		</style>
 	</head>
 	<body>
-		<video
-				id="my-player"
-				class="video-js"
-				loop="loop"
-				preload="metadata"
-				data-setup='{}'>
-			<source src="hls/cd02_ld.m3u8" type="application/x-mpegURL">
-		</video>
+
 		<div id="container"></div>
 
-		<script src="node_modules/three/build/three.js"></script>
-		<script src="node_modules/video.js/dist/video.js"></script>
-		<script src="node_modules/videojs-contrib-hls/dist/videojs-contrib-hls.js"></script>
+		<script src="three.js"></script>
 		<script>
 
 			var camera, scene, renderer, texture, video, hasInit, lastRefresh;
@@ -64,8 +55,13 @@
 			animate();
 			
 			function initVideo() {
-				video = videojs( 'my-player' );
+                video = document.createElement( 'video' );
+                video.width = window.innerWidth;
+                video.height = window.innerHeight;
 
+                video.loop = true;
+                video.src = './mp4/chezhan.mp4';
+                video.setAttribute("preload", "metadata");
 
 	var p = video;
       p.setAttribute('x5-video-player-type', 'h5');
@@ -75,8 +71,8 @@
       p.setAttribute('x5-video-player-fullscreen', "false");
 
 				//video.setAttribute( 'webkit-playsinline', 'webkit-playsinline' );
-				video.on("loadeddata", init);
-				video.on("play", animate);
+				video.addEventListener("loadeddata", init);
+				video.addEventListener("play", animate);
 				video.load();
 			}
 
@@ -123,7 +119,7 @@
 				
 				//video.play();
 
-				texture = new THREE.VideoTexture( document.getElementById('my-player') );
+				texture = new THREE.VideoTexture( video );
 				texture.minFilter = THREE.LinearFilter;
 				texture.format = THREE.RGBAFormat;
 				texture.magFilter = THREE.LinearFilter;

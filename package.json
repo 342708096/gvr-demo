@@ -9,9 +9,9 @@
     "videojs-contrib-hls": "^5.5.2"
   },
   "devDependencies": {
-    "http-server": "^0.10.0"
+    "browser-sync": "^2.18.11"
   },
   "scripts": {
-    "start": "http-server -a 0.0.0.0 -p 9000"
+    "start": "browser-sync start --server --files *.*"
   }
 }
