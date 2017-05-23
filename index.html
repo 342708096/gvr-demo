@@ -37,6 +37,8 @@
 		const player = new Player('./mp4/chezhan.mp4');
 		player.appendToContainer(document.getElementById('container'));
 		document.addEventListener('click', () => player.play());
+		const controller = new Controller(player);
+		controller.enableTouchControls();
 		</script>
 	</body>
 </html>
