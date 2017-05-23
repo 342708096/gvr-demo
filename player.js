@@ -1,306 +1,307 @@
 class EventEmitter {
-    constructor(){}
-    _events = undefined;
-    prefixed = typeof Object.create !== 'function' ? '~' : false;
-    eventNames() {
-        var events = this._events
-            , names = []
-            , name;
+  _events = undefined;
+  prefixed = typeof Object.create !== 'function' ? '~' : false;
+  eventNames() {
+    const events = this._events,
+      names = [];
 
-        if (!events) return names;
-
-        for (name in events) {
-            if (Object.prototype.hasOwnProperty.call(events, name)) names.push(this.prefixed ? name.slice(1) : name);
-        }
-
-        if (Object.getOwnPropertySymbols) {
-            return names.concat(Object.getOwnPropertySymbols(events));
-        }
-
-        return names;
+    if (!events) return names;
+    for (const name in events) {
+      if (Object.prototype.hasOwnProperty.call(events, name)) {
+        names.push(this.prefixed ? name.slice(1) : name);
+      }
     }
-    listeners(event, exists) {
-        var evt = this.prefixed ? this.prefixed + event : event
-            , available = this._events && this._events[evt];
 
-        if (exists) return !!available;
-        if (!available) return [];
-        if (available.fn) return [available.fn];
-
-        for (var i = 0, l = available.length, ee = new Array(l); i < l; i++) {
-            ee[i] = available[i].fn;
-        }
-
-        return ee;
+    if (Object.getOwnPropertySymbols) {
+      return names.concat(Object.getOwnPropertySymbols(events));
     }
-    emit(event, a1, a2, a3, a4, a5) {
-        var evt = this.prefixed ? this.prefixed + event : event;
 
-        if (!this._events || !this._events[evt]) return false;
+    return names;
+  }
+  listeners(event, exists) {
+    const evt = this.prefixed ? this.prefixed + event : event;
+    const available = this._events && this._events[evt];
 
-        var listeners = this._events[evt]
-            , len = arguments.length
-            , args
-            , i;
+    if (exists) return !!available;
+    if (!available) return [];
+    if (available.fn) return [available.fn];
+    const l = available.length,
+      ee = new Array(l);
+    for (let i = 0; i < l; i++) {
+      ee[i] = available[i].fn;
+    }
 
-        if ('function' === typeof listeners.fn) {
-            if (listeners.once) this.removeListener(event, listeners.fn, undefined, true);
+    return ee;
+  }
+  emit(event, a1, a2, a3, a4, a5) {
+    const evt = this.prefixed ? this.prefixed + event : event;
 
-            switch (len) {
-                case 1: return listeners.fn.call(listeners.context), true;
-                case 2: return listeners.fn.call(listeners.context, a1), true;
-                case 3: return listeners.fn.call(listeners.context, a1, a2), true;
-                case 4: return listeners.fn.call(listeners.context, a1, a2, a3), true;
-                case 5: return listeners.fn.call(listeners.context, a1, a2, a3, a4), true;
-                case 6: return listeners.fn.call(listeners.context, a1, a2, a3, a4, a5), true;
+    if (!this._events || !this._events[evt]) return false;
+
+    let listeners = this._events[evt],
+      len = arguments.length,
+      args,
+      i;
+
+    if (typeof listeners.fn === 'function') {
+      if (listeners.once) this.removeListener(event, listeners.fn, undefined, true);
+
+      switch (len) {
+        case 1: return listeners.fn.call(listeners.context), true;
+        case 2: return listeners.fn.call(listeners.context, a1), true;
+        case 3: return listeners.fn.call(listeners.context, a1, a2), true;
+        case 4: return listeners.fn.call(listeners.context, a1, a2, a3), true;
+        case 5: return listeners.fn.call(listeners.context, a1, a2, a3, a4), true;
+        case 6: return listeners.fn.call(listeners.context, a1, a2, a3, a4, a5), true;
+      }
+
+      for (i = 1, args = new Array(len - 1); i < len; i++) {
+        args[i - 1] = arguments[i];
+      }
+
+      listeners.fn.apply(listeners.context, args);
+    } else {
+      const length = listeners.length;
+      let j;
+
+      for (i = 0; i < length; i++) {
+        if (listeners[i].once) this.removeListener(event, listeners[i].fn, undefined, true);
+
+        switch (len) {
+          case 1: listeners[i].fn.call(listeners[i].context); break;
+          case 2: listeners[i].fn.call(listeners[i].context, a1); break;
+          case 3: listeners[i].fn.call(listeners[i].context, a1, a2); break;
+          default:
+            if (!args) {
+              for (j = 1, args = new Array(len - 1); j < len; j++) {
+                args[j - 1] = arguments[j];
+              }
             }
 
-            for (i = 1, args = new Array(len -1); i < len; i++) {
-                args[i - 1] = arguments[i];
-            }
-
-            listeners.fn.apply(listeners.context, args);
-        } else {
-            var length = listeners.length
-                , j;
-
-            for (i = 0; i < length; i++) {
-                if (listeners[i].once) this.removeListener(event, listeners[i].fn, undefined, true);
-
-                switch (len) {
-                    case 1: listeners[i].fn.call(listeners[i].context); break;
-                    case 2: listeners[i].fn.call(listeners[i].context, a1); break;
-                    case 3: listeners[i].fn.call(listeners[i].context, a1, a2); break;
-                    default:
-                        if (!args) for (j = 1, args = new Array(len -1); j < len; j++) {
-                            args[j - 1] = arguments[j];
-                        }
-
-                        listeners[i].fn.apply(listeners[i].context, args);
-                }
-            }
+            listeners[i].fn.apply(listeners[i].context, args);
         }
-
-        return true;
+      }
     }
-    on(event, fn, context) {
-        var listener = {fn, context: context || this, once: false}
-            , evt = this.prefixed ? this.prefixed + event : event;
 
-        if (!this._events) this._events = this.prefixed ? {} : Object.create(null);
-        if (!this._events[evt]) this._events[evt] = listener;
-        else {
-            if (!this._events[evt].fn) this._events[evt].push(listener);
-            else this._events[evt] = [
-                this._events[evt], listener
-            ];
-        }
+    return true;
+  }
+  on(event, fn, context) {
+    const listener = { fn, context: context || this, once: false },
+      evt = this.prefixed ? this.prefixed + event : event;
 
-        return this;
+    if (!this._events) this._events = this.prefixed ? {} : Object.create(null);
+    if (!this._events[evt]) this._events[evt] = listener;
+    else if (!this._events[evt].fn) this._events[evt].push(listener);
+    else {
+      this._events[evt] = [
+        this._events[evt], listener
+      ];
     }
-    once(event, fn, context) {
-        var listener = {fn, context: context || this, once: true}
-            , evt = this.prefixed ? this.prefixed + event : event;
 
-        if (!this._events) this._events = this.prefixed ? {} : Object.create(null);
-        if (!this._events[evt]) this._events[evt] = listener;
-        else {
-            if (!this._events[evt].fn) this._events[evt].push(listener);
-            else this._events[evt] = [
-                this._events[evt], listener
-            ];
-        }
+    return this;
+  }
+  once(event, fn, context) {
+    const listener = { fn, context: context || this, once: true },
+      evt = this.prefixed ? this.prefixed + event : event;
 
-        return this;
+    if (!this._events) this._events = this.prefixed ? {} : Object.create(null);
+    if (!this._events[evt]) this._events[evt] = listener;
+    else if (!this._events[evt].fn) this._events[evt].push(listener);
+    else {
+      this._events[evt] = [
+        this._events[evt], listener
+      ];
     }
-    off(event, fn, context, once) {
-        var evt = this.prefixed ? this.prefixed + event : event;
 
-        if (!this._events || !this._events[evt]) return this;
+    return this;
+  }
+  off(event, fn, context, once) {
+    const evt = this.prefixed ? this.prefixed + event : event;
 
-        var listeners = this._events[evt]
-            , events = [];
+    if (!this._events || !this._events[evt]) return this;
 
-        if (fn) {
-            if (listeners.fn) {
-                if (
+    const listeners = this._events[evt],
+      events = [];
+
+    if (fn) {
+      if (listeners.fn) {
+        if (
                     listeners.fn !== fn
                     || (once && !listeners.once)
                     || (context && listeners.context !== context)
                 ) {
-                    events.push(listeners);
-                }
-            } else {
-                for (var i = 0, length = listeners.length; i < length; i++) {
-                    if (
+          events.push(listeners);
+        }
+      } else {
+        for (let i = 0, length = listeners.length; i < length; i++) {
+          if (
                         listeners[i].fn !== fn
                         || (once && !listeners[i].once)
                         || (context && listeners[i].context !== context)
                     ) {
-                        events.push(listeners[i]);
-                    }
-                }
-            }
+            events.push(listeners[i]);
+          }
         }
+      }
+    }
 
         //
         // Reset the array, or remove it completely if we have no more listeners.
         //
-        if (events.length) {
-            this._events[evt] = events.length === 1 ? events[0] : events;
-        } else {
-            delete this._events[evt];
-        }
-
-        return this;
+    if (events.length) {
+      this._events[evt] = events.length === 1 ? events[0] : events;
+    } else {
+      delete this._events[evt];
     }
-    removeAllListeners(event) {
-        if (!this._events) return this;
 
-        if (event) delete this._events[this.prefixed ? this.prefixed + event : event];
-        else this._events = this.prefixed ? {} : Object.create(null);
+    return this;
+  }
+  removeAllListeners(event) {
+    if (!this._events) return this;
 
-        return this;
-    }
+    if (event) delete this._events[this.prefixed ? this.prefixed + event : event];
+    else this._events = this.prefixed ? {} : Object.create(null);
+
+    return this;
+  }
 }
 
 
-
 class Player extends EventEmitter {
-    constructor(config) {
-        super();
-        this.lastRefresh = 0;
-        this.deg = 45;
+  constructor(config) {
+    super();
+    this.lastRefresh = 0;
+    this.deg = 45;
         // initialize video
-        const video = this.video = document.createElement('video');
-        Object.assign(this.video, {
-            width: window.innerWidth,
-            height: window.innerHeight,
-            loop: true,
+    const video = this.video = document.createElement('video');
+    Object.assign(this.video, {
+      width: window.innerWidth,
+      height: window.innerHeight,
+      loop: true,
             // preload : "metadata"
-        });
+    });
 
-        video.setAttribute('preload', 'auto');
-        video.setAttribute('x5-video-player-type', 'h5');
-        video.setAttribute('webkit-playsinline', 'true');
-        video.setAttribute('x-webkit-airplay', 'true');
-        video.setAttribute('playsinline', 'true');
-        video.setAttribute('x5-video-player-fullscreen', "false");
-        video.setAttribute('crossorigin', 'anonymous');
+    video.setAttribute('preload', 'auto');
+    video.setAttribute('x5-video-player-type', 'h5');
+    video.setAttribute('webkit-playsinline', 'true');
+    video.setAttribute('x-webkit-airplay', 'true');
+    video.setAttribute('playsinline', 'true');
+    video.setAttribute('x5-video-player-fullscreen', 'false');
+    video.setAttribute('crossorigin', 'anonymous');
 
-        //initialize config
-        this.config = {distance: 500};
+        // initialize config
+    this.config = { distance: 500 };
         // Object.assign(this.config, config);
 
-        //initialize camera
-        const camera = this.camera = new THREE.PerspectiveCamera( 45, 2, 1, 1100 );
-        camera.target = new THREE.Vector3( 0, 0, 0 );
-        camera.zoom = 1.5;
-        camera.rotation.reorder('YXZ');
-        camera.layers.enable(1);
-        camera.aspect = 2; //videoWidth / videoHeight;
-        camera.updateProjectionMatrix();
+        // initialize camera
+    const camera = this.camera = new THREE.PerspectiveCamera(45, 2, 1, 1100);
+    camera.target = new THREE.Vector3(0, 0, 0);
+    camera.zoom = 1.5;
+    camera.rotation.reorder('YXZ');
+    camera.layers.enable(1);
+    camera.aspect = 2; // videoWidth / videoHeight;
+    camera.updateProjectionMatrix();
 
-        //initialize geometry
-        const geometry = this.geometry = new THREE.SphereBufferGeometry( 500, 64, 44 );
-        geometry.scale( - 1, 1, 1 );
+        // initialize geometry
+    const geometry = this.geometry = new THREE.SphereBufferGeometry(500, 64, 44);
+    geometry.scale(-1, 1, 1);
 
-        //initialize texture
-        const texture = this.texture = new THREE.VideoTexture( video );
-        texture.minFilter = THREE.LinearFilter;
-        texture.magFilter = THREE.LinearFilter;
-        texture.format = THREE.RGBAFormat; //THREE.RGAFormat
-        texture.generateMipmaps = false;
-        texture.flipY = false;
-        texture.needsUpdate = true;
+        // initialize texture
+    const texture = this.texture = new THREE.VideoTexture(video);
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.format = THREE.RGBAFormat; // THREE.RGAFormat
+    texture.generateMipmaps = false;
+    texture.flipY = false;
+    texture.needsUpdate = true;
 
-        //initialize mesh
-        const equirect_frag = "uniform sampler2D tEquirect;\nuniform float tFlip;\nvarying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvec3 direction = normalize( vWorldPosition );\n\tvec2 sampleUV;\n\tsampleUV.y = saturate( tFlip * direction.y * -0.5 + 0.5 );\n\tsampleUV.x = atan( direction.z, direction.x ) * RECIPROCAL_PI2 + 0.5;\n\tgl_FragColor = texture2D( tEquirect, sampleUV ).bgra;\n}\n";
+        // initialize mesh
+    const equirect_frag = 'uniform sampler2D tEquirect;\nuniform float tFlip;\nvarying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvec3 direction = normalize( vWorldPosition );\n\tvec2 sampleUV;\n\tsampleUV.y = saturate( tFlip * direction.y * -0.5 + 0.5 );\n\tsampleUV.x = atan( direction.z, direction.x ) * RECIPROCAL_PI2 + 0.5;\n\tgl_FragColor = texture2D( tEquirect, sampleUV ).bgra;\n}\n';
 
-        const equirect_vert = "varying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvWorldPosition = transformDirection( position, modelMatrix );\n\t#include <begin_vertex>\n\t#include <project_vertex>\n}\n";
+    const equirect_vert = 'varying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvWorldPosition = transformDirection( position, modelMatrix );\n\t#include <begin_vertex>\n\t#include <project_vertex>\n}\n';
 
-        const uniforms =  {
-            tEquirect: { value: texture },
-            tFlip: { value: 1 }
-        };
+    const uniforms = {
+      tEquirect: { value: texture },
+      tFlip: { value: 1 }
+    };
 
-        const material = new THREE.ShaderMaterial( {
-            uniforms: uniforms,
-            vertexShader: equirect_vert,
-            fragmentShader: equirect_frag
+    const material = new THREE.ShaderMaterial({
+      uniforms,
+      vertexShader: equirect_vert,
+      fragmentShader: equirect_frag
+    });
+
+    const mesh = new THREE.Mesh(geometry, material);
+
+
+        // initialize scene
+    const scene = this.scene = new THREE.Scene();
+    scene.add(mesh);
+
+        // initialize renderer
+    const renderer = this.renderer = new THREE.WebGLRenderer();
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(this.video.width, this.video.height);
+  }
+
+  load(url) {
+    return new Promise((resolve, reject) => {
+      const video = this.video;
+      video.src = url;
+      video.addEventListener('canplaythrough', resolve);
+      video.addEventListener('loadedmetadata', () => {
+        this.emit('timeupdate', {
+          currentTime: video.currentTime,
+          duration: video.duration
         });
-
-        const mesh = new THREE.Mesh( geometry, material );
-
-
-        //initialize scene
-        const scene = this.scene = new THREE.Scene();
-        scene.add(mesh);
-
-        //initialize renderer
-        const renderer = this.renderer = new THREE.WebGLRenderer();
-        renderer.setPixelRatio( window.devicePixelRatio );
-        renderer.setSize( this.video.width , this.video.height);
-    }
-
-    load(url){
-        return new Promise((resolve, reject) => {
-            const video = this.video;
-            video.src = url;
-            video.addEventListener('canplaythrough', resolve);
-            video.addEventListener('loadedmetadata', () => {
-                this.emit('timeupdate', {
-                    currentTime: video.currentTime,
-                    duration: video.duration
-                })
-            });
-            video.addEventListener('error', reject);
-            video.load();
-        })
+      });
+      video.addEventListener('error', reject);
+      video.load();
+    })
             .then(() => this.emit('load', this.video))
-            .catch((e) => this.emit('error', e))
-    }
+            .catch((e) => this.emit('error', e));
+  }
 
-    destroy(){
-        this.video.pause();
-        this.video.src = '';
-        this.video = null;
-    }
+  destroy() {
+    this.video.pause();
+    this.video.src = '';
+    this.video = null;
+  }
 
-    play(){
-        this.video.play();
+  play() {
+    this.video.play();
 
-        this.animate();
-    }
+    this.animate();
+  }
 
-    render(){
-        this.renderer.render(this.scene, this.camera);
-    }
+  render() {
+    this.renderer.render(this.scene, this.camera);
+  }
 
-    appendToContainer(container){
-        container.appendChild(this.renderer.domElement);
-    }
+  appendToContainer(container) {
+    container.appendChild(this.renderer.domElement);
+  }
 
-    updateCameraPosition (x, y, z){
-        this.camera.position.x = x;
-        this.camera.position.y = y;
-        this.camera.position.z = z;
-        this.camera.lookAt( this.camera.target );
-        this.render();
-    }
+  updateCameraPosition(x, y, z) {
+    this.camera.position.x = x;
+    this.camera.position.y = y;
+    this.camera.position.z = z;
+    this.camera.lookAt(this.camera.target);
+    this.render();
+  }
 
-    updateCameraPositionByDeg (theta, phi){
-        theta = THREE.Math.degToRad(theta);
-        phi  = THREE.Math.degToRad(90 - Math.max (-85, Math.min (85, phi)));
-        this.updateCameraPosition(
-            this.config.distance * Math.sin( phi ) * Math.cos( theta ),
-            this.config.distance * Math.cos( phi ),
-            this.config.distance * Math.sin( phi ) * Math.sin( theta )
-        )
-    }
+  updateCameraPositionByDeg(theta, phi) {
+    theta = THREE.Math.degToRad(theta);
+    phi = THREE.Math.degToRad(90 - Math.max(-85, Math.min(85, phi)));
+    this.updateCameraPosition(
+            this.config.distance * Math.sin(phi) * Math.cos(theta),
+            this.config.distance * Math.cos(phi),
+            this.config.distance * Math.sin(phi) * Math.sin(theta)
+        );
+  }
 
-    animate () {
-        requestAnimationFrame( this.animate.bind(this) );
+  animate() {
+    requestAnimationFrame(this.animate.bind(this));
         // const now = new Date().getTime();
         // if (now - this.lastRefresh >= 100) {
         //     this.lastRefresh = now;
@@ -310,42 +311,9 @@ class Player extends EventEmitter {
         //     }
         //     this.updateCameraPositionByDeg(this.deg, 0);
         // }else{
-            this.render();
+    this.render();
         // }
-    }
+  }
 
 }
 
-class Controller {
-    constructor(player) {
-        this.player = player;
-        this.canvas = player.renderer.domElement;
-    }
-
-    enableTouchControls() {
-        const canvas = this.canvas;
-        let t = 0, e = 0, n = false, r = 0, a = 0, o = function (o) {
-            if ("mousemove" === o.type) {
-                let i = !1;
-                i = "buttons" in o ? 1 === o.buttons : "which" in o ? 1 === o.which : 1 === o.button, i || (n = !1)
-            }
-            if (o.preventDefault(), n) {
-                let u = o.pageX || o.touches[0].pageX, s = o.pageY || o.touches[0].pageY,
-                    l = u - window.pageXOffset, d = s - window.pageYOffset;
-                e = (d - a) / canvas.height * -5, t = (l - r) / canvas.width * -5, r || (r = t, a = e);
-                let f = t - r, h = e - a;
-                r = t, a = e
-            }
-        }, i = function () {
-            r = null, a = null, n = !1
-        }, u = function (t) {
-            n = !0
-        };
-        canvas.addEventListener("mousedown", u),
-        canvas.addEventListener("mousemove", o),
-        canvas.addEventListener("mouseup", i),
-        canvas.addEventListener("touchstart", u),
-        canvas.addEventListener("touchmove", o),
-        canvas.addEventListener("touchend", i)
-    }
-}
