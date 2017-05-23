@@ -1,6 +1,8 @@
 class EventEmitter {
-  _events = undefined;
-  prefixed = typeof Object.create !== 'function' ? '~' : false;
+  constructor() {
+    this._events = undefined;
+    this.prefixed = typeof Object.create !== 'function' ? '~' : false;
+  }
   eventNames() {
     const events = this._events,
       names = [];
@@ -302,17 +304,7 @@ class Player extends EventEmitter {
 
   animate() {
     requestAnimationFrame(this.animate.bind(this));
-        // const now = new Date().getTime();
-        // if (now - this.lastRefresh >= 100) {
-        //     this.lastRefresh = now;
-        //     this.deg ++;
-        //     if (this.deg > 360) {
-        //         this.deg = 0;
-        //     }
-        //     this.updateCameraPositionByDeg(this.deg, 0);
-        // }else{
     this.render();
-        // }
   }
 
 }
