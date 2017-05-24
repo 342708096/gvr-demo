@@ -1,0 +1,45 @@
+<html lang="en">
+<head>
+    <title>three.js webgl </title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=yes, minimum-scale=1.0, maximum-scale=5.0">
+    <style>
+        body {
+            background-color: #000000;
+            margin: 0px;
+            overflow: hidden;
+        }
+
+        #info {
+            position: absolute;
+            top: 0px; width: 100%;
+            color: #ffffff;
+            padding: 5px;
+            font-family:Monospace;
+            font-size:13px;
+            font-weight: bold;
+            text-align:center;
+        }
+
+        a {
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+<div id="container">
+    <video id="video" src="mp4/chezhan.mp4" loop ></video>
+</div>
+<script>
+
+    var video = document.getElementById('video');
+    video.width = window.innerWidth;
+    video.height = window.innerHeight;
+    video.addEventListener('loadeddata', function () {
+        video.play();
+    });
+    video.load();
+</script>
+</body>
+</html>
