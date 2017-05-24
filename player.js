@@ -178,7 +178,7 @@ class Player extends EventEmitter {
         distance: 500,
         width: window.innerWidth,
         height: window.innerHeight,
-        aspect: window.innerWidth / window.innerHeight,
+        aspect: 2,
         loop: true,
         zoom: 1.5,
         cameraFOV: 45,
@@ -186,7 +186,7 @@ class Player extends EventEmitter {
         scaleY : 1,
         offsetX : 0,
         offsetY : 0,
-        phiStart : 0,
+        phiStart : Math.PI/180 * 90, //90deg
         phiLength : Math.PI * 2,
         thetaStart : 0,
         thetaLength: Math.PI,
@@ -215,7 +215,7 @@ class Player extends EventEmitter {
 
 
         // initialize camera
-    const camera = this.camera = new THREE.PerspectiveCamera(this.config.cameraFOV, this.config.aspect, 0.1, 100);
+    const camera = this.camera = new THREE.PerspectiveCamera(this.config.cameraFOV, this.config.aspect, 1, 1000);
     // camera.target = new THREE.Vector3(0, 0, 0);
     camera.zoom = this.config.zoom;
     // camera.rotation.reorder('YXZ');
@@ -322,13 +322,13 @@ class Player extends EventEmitter {
           scaleY : config.scaleY || 1,
           offsetX : config.offsetX || 0,
           offsetY : config.offsetY || 0,
-          phiStart : config.phiStart || 0,
+          phiStart : config.phiStart || Math.PI/180 * 90,
           phiLength : config.phiLength || Math.PI * 2,
           thetaStart : config.thetaStart || 0,
           thetaLength: config.thetaLength || Math.PI
         };
 
-        const geometry = new THREE.SphereGeometry(2, 48, 48,
+        const geometry = new THREE.SphereGeometry(100, 64, 45,
             p.phiStart, p.phiLength, p.thetaStart, p.thetaLength);
         geometry.applyMatrix(new THREE.Matrix4().makeScale(-1, 1, 1));
         const uvs = geometry.faceVertexUvs[0];
