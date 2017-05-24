@@ -172,7 +172,7 @@ class EventEmitter {
 class Player extends EventEmitter {
   constructor(container, config) {
     super();
-
+    container = container || window.document.body;
     // initialize config
     this.config = {
         distance: 500,
