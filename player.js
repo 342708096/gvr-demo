@@ -170,16 +170,38 @@ class EventEmitter {
 
 
 class Player extends EventEmitter {
-  constructor(config) {
+  constructor(container, config) {
     super();
+
+    // initialize config
+    this.config = {
+        distance: 500,
+        width: window.innerWidth,
+        height: window.innerHeight,
+        aspect: window.innerWidth / window.innerHeight,
+        loop: true,
+        zoom: 1.5,
+        cameraFOV: 45,
+        scaleX : 1,
+        scaleY : 1,
+        offsetX : 0,
+        offsetY : 0,
+        phiStart : 0,
+        phiLength : Math.PI * 2,
+        thetaStart : 0,
+        thetaLength: Math.PI,
+    };
+    Object.assign(this.config, config || {});
+
+
     this.lastRefresh = 0;
     this.deg = 45;
         // initialize video
     const video = this.video = document.createElement('video');
     Object.assign(this.video, {
-      width: window.innerWidth,
-      height: window.innerHeight,
-      loop: true,
+      width: this.config.width,
+      height: this.config.height,
+      loop: this.config.loop,
             // preload : "metadata"
     });
 
@@ -191,59 +213,77 @@ class Player extends EventEmitter {
     video.setAttribute('x5-video-player-fullscreen', 'false');
     video.setAttribute('crossorigin', 'anonymous');
 
-        // initialize config
-    this.config = { distance: 500 };
-        // Object.assign(this.config, config);
 
         // initialize camera
-    const camera = this.camera = new THREE.PerspectiveCamera(45, 2, 1, 1100);
-    camera.target = new THREE.Vector3(0, 0, 0);
-    camera.zoom = 1.5;
-    camera.rotation.reorder('YXZ');
+    const camera = this.camera = new THREE.PerspectiveCamera(this.config.cameraFOV, this.config.aspect, 0.1, 100);
+    // camera.target = new THREE.Vector3(0, 0, 0);
+    camera.zoom = this.config.zoom;
+    // camera.rotation.reorder('YXZ');
     camera.layers.enable(1);
-    camera.aspect = 2; // videoWidth / videoHeight;
-    camera.updateProjectionMatrix();
+    // camera.updateProjectionMatrix();
+    const cameraDummy = this.cameraParent = new THREE.Object3D();
+    cameraDummy.add(camera);
 
-        // initialize geometry
-    const geometry = this.geometry = new THREE.SphereBufferGeometry(500, 64, 44);
-    geometry.scale(-1, 1, 1);
+    const controls = this.controls = new THREE.VRControls(camera);
 
-        // initialize texture
-    const texture = this.texture = new THREE.VideoTexture(video);
-    texture.minFilter = THREE.LinearFilter;
-    texture.magFilter = THREE.LinearFilter;
-    texture.format = THREE.RGBAFormat; // THREE.RGAFormat
-    texture.generateMipmaps = false;
-    texture.flipY = false;
-    texture.needsUpdate = true;
-
-        // initialize mesh
-    const equirectFrag = 'uniform sampler2D tEquirect;\nuniform float tFlip;\nvarying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvec3 direction = normalize( vWorldPosition );\n\tvec2 sampleUV;\n\tsampleUV.y = saturate( tFlip * direction.y * -0.5 + 0.5 );\n\tsampleUV.x = atan( direction.z, direction.x ) * RECIPROCAL_PI2 + 0.5;\n\tgl_FragColor = texture2D( tEquirect, sampleUV ).bgra;\n}\n';
-
-    const equirectVert = 'varying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvWorldPosition = transformDirection( position, modelMatrix );\n\t#include <begin_vertex>\n\t#include <project_vertex>\n}\n';
-
-    const uniforms = {
-      tEquirect: { value: texture },
-      tFlip: { value: 1 }
-    };
-
-    const material = new THREE.ShaderMaterial({
-      uniforms,
-      vertexShader: equirectVert,
-      fragmentShader: equirectFrag
-    });
-
-    const mesh = new THREE.Mesh(geometry, material);
-
-
-        // initialize scene
-    const scene = this.scene = new THREE.Scene();
-    scene.add(mesh);
-
-        // initialize renderer
-    const renderer = this.renderer = new THREE.WebGLRenderer();
+    // initialize renderer
+    const renderer = this.renderer = new THREE.WebGLRenderer({antialias: false}); //关闭抗锯齿以提高性能
+    renderer.setClearColor(0x000000, 0);
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(this.video.width, this.video.height);
+    container.appendChild(renderer.domElement);
+    //  effect
+
+    const effect = this.effect = new THREE.VREffect(renderer);
+    // Disable eye separation.
+    effect.scale = 0;
+    effect.setSize(this.video.width, this.video.height);
+
+    // Present submission of frames automatically. This is done manually in
+    // submitFrame().
+    effect.autoSubmitFrame = true;
+
+
+    // initialize scene
+    const scene = this.scene = new THREE.Scene();
+    const photoGroup = new THREE.Object3D();
+    photoGroup.name = 'photo';
+    scene.add(photoGroup);
+    scene.add(camera.parent);
+
+    //     // initialize geometry
+    // const geometry = this.geometry = new THREE.SphereBufferGeometry(500, 64, 44);
+    // geometry.scale(-1, 1, 1);
+    //
+    //     // initialize texture
+    // const texture = this.texture = new THREE.VideoTexture(video);
+    // texture.minFilter = THREE.LinearFilter;
+    // texture.magFilter = THREE.LinearFilter;
+    // texture.format = THREE.RGBAFormat; // THREE.RGAFormat
+    // texture.generateMipmaps = false;
+    // texture.flipY = false;
+    // texture.needsUpdate = true;
+    //
+    //     // initialize mesh
+    // const equirectFrag = 'uniform sampler2D tEquirect;\nuniform float tFlip;\nvarying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvec3 direction = normalize( vWorldPosition );\n\tvec2 sampleUV;\n\tsampleUV.y = saturate( tFlip * direction.y * -0.5 + 0.5 );\n\tsampleUV.x = atan( direction.z, direction.x ) * RECIPROCAL_PI2 + 0.5;\n\tgl_FragColor = texture2D( tEquirect, sampleUV ).bgra;\n}\n';
+    //
+    // const equirectVert = 'varying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvWorldPosition = transformDirection( position, modelMatrix );\n\t#include <begin_vertex>\n\t#include <project_vertex>\n}\n';
+    //
+    // const uniforms = {
+    //   tEquirect: { value: texture },
+    //   tFlip: { value: 1 }
+    // };
+    //
+    // const material = new THREE.ShaderMaterial({
+    //   uniforms,
+    //   vertexShader: equirectVert,
+    //   fragmentShader: equirectFrag
+    // });
+    //
+    // const mesh = new THREE.Mesh(geometry, material);
+    //
+    // scene.add(mesh);
+
   }
 
   load(url) {
@@ -260,8 +300,65 @@ class Player extends EventEmitter {
       video.addEventListener('error', reject);
       video.load();
     })
-            .then(() => this.emit('load', this.video))
-            .catch((e) => this.emit('error', e));
+        .then(() => this.emit('load', this.video))
+        .then(() => this.createSphereRenderer())
+        .then(() => this.loopRender())
+        .catch((e) => this.emit('error', e));
+  }
+
+  createSphereRenderer(){
+    //texture
+      const texture = this.texture = new THREE.VideoTexture(this.video);
+      texture.minFilter = THREE.LinearFilter;
+      texture.magFilter = THREE.LinearFilter;
+      texture.format = THREE.RGBFormat;
+      texture.generateMipmaps = false;
+      texture.needsUpdate = true;
+
+      function createPhotosphere_ (texture, config) {
+        config = config || {};
+        const p = {
+          scaleX : config.scaleX || 1,
+          scaleY : config.scaleY || 1,
+          offsetX : config.offsetX || 0,
+          offsetY : config.offsetY || 0,
+          phiStart : config.phiStart || 0,
+          phiLength : config.phiLength || Math.PI * 2,
+          thetaStart : config.thetaStart || 0,
+          thetaLength: config.thetaLength || Math.PI
+        };
+
+        const geometry = new THREE.SphereGeometry(2, 48, 48,
+            p.phiStart, p.phiLength, p.thetaStart, p.thetaLength);
+        geometry.applyMatrix(new THREE.Matrix4().makeScale(-1, 1, 1));
+        const uvs = geometry.faceVertexUvs[0];
+        for (let i = 0; i < uvs.length; i ++) {
+            for (let j = 0; j < 3; j ++) {
+                uvs[i][j].x *= p.scaleX;
+                uvs[i][j].x += p.offsetX;
+                uvs[i][j].y *= p.scaleY;
+                uvs[i][j].y += p.offsetY;
+            }
+        }
+
+        const material = new THREE.MeshBasicMaterial({ map: texture });
+        const out = new THREE.Mesh(geometry, material);
+        //out.visible = false;
+        out.renderOrder = -1;
+        return out;
+
+      }
+
+      const sphereLeft = createPhotosphere_(texture),
+          sphereRight = createPhotosphere_(texture);
+
+      sphereLeft.layers.set(1); // leftEye 1 rightEye 2
+      sphereLeft.eye = 1;
+      sphereRight.layers.set(2);
+      sphereRight.eye = 2;
+
+      this.scene.getObjectByName('photo').children = [sphereLeft, sphereRight];
+
   }
 
   destroy() {
@@ -272,40 +369,31 @@ class Player extends EventEmitter {
 
   play() {
     this.video.play();
-
-    this.animate();
   }
 
-  render() {
-    this.renderer.render(this.scene, this.camera);
+  loopRender() {
+    requestAnimationFrame(this.loopRender.bind(this));
+    this.controls.update();
+    this.effect.render(this.scene, this.camera);
   }
 
-  appendToContainer(container) {
-    container.appendChild(this.renderer.domElement);
-  }
+  // updateCameraPosition(x, y, z) {
+  //   this.camera.position.x = x;
+  //   this.camera.position.y = y;
+  //   this.camera.position.z = z;
+  //   this.camera.lookAt(this.camera.target);
+  //   this.render();
+  // }
 
-  updateCameraPosition(x, y, z) {
-    this.camera.position.x = x;
-    this.camera.position.y = y;
-    this.camera.position.z = z;
-    this.camera.lookAt(this.camera.target);
-    this.render();
-  }
-
-  updateCameraPositionByDeg(theta, phi) {
-    theta = THREE.Math.degToRad(theta);
-    phi = THREE.Math.degToRad(90 - Math.max(-85, Math.min(85, phi)));
-    this.updateCameraPosition(
-            this.config.distance * Math.sin(phi) * Math.cos(theta),
-            this.config.distance * Math.cos(phi),
-            this.config.distance * Math.sin(phi) * Math.sin(theta)
-        );
-  }
-
-  animate() {
-    requestAnimationFrame(this.animate.bind(this));
-    this.render();
-  }
+  // updateCameraPositionByDeg(theta, phi) {
+  //   theta = THREE.Math.degToRad(theta);
+  //   phi = THREE.Math.degToRad(90 - Math.max(-85, Math.min(85, phi)));
+  //   this.updateCameraPosition(
+  //           this.config.distance * Math.sin(phi) * Math.cos(theta),
+  //           this.config.distance * Math.cos(phi),
+  //           this.config.distance * Math.sin(phi) * Math.sin(theta)
+  //       );
+  // }
 
 }
 

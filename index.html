@@ -31,14 +31,13 @@
 		<div id="container"></div>
 
 		<script src="three.js"></script>
+		<script src="webvr-polyfill.js"></script>
 		<script src="player.js"></script>
 		<script>
 
-		const player = new Player('./mp4/chezhan.mp4');
-		player.appendToContainer(document.getElementById('container'));
-		document.addEventListener('click', () => player.play());
-		const controller = new Controller(player);
-		controller.enableTouchControls();
+		const player = new Player(document.getElementById('container'));
+		player.load('./mp4/chezhan.mp4').then(() => player.play());
+
 		</script>
 	</body>
 </html>
