@@ -170,7 +170,7 @@ class EventEmitter {
 
 
 class Player extends EventEmitter {
-  constructor(container, config) {
+  constructor(container, video, config) {
     super();
     container = container || window.document.body;
     // initialize config
@@ -193,27 +193,26 @@ class Player extends EventEmitter {
     };
     Object.assign(this.config, config || {});
 
+    if (!video) {
+      video = this.video = document.createElement('video');
+      video.setAttribute('preload', 'auto');
+      video.setAttribute('x5-video-player-type', 'h5');
+      video.setAttribute('webkit-playsinline', 'true');
+      video.setAttribute('x-webkit-airplay', 'true');
+      video.setAttribute('playsinline', 'true');
+      video.setAttribute('x5-video-player-fullscreen', 'true');
+      video.setAttribute('crossorigin', 'anonymous');
+    }
 
-    this.lastRefresh = 0;
-    this.deg = 45;
+    this.video = video;
         // initialize video
-    const video = this.video = document.createElement('video');
+
     Object.assign(this.video, {
       width: this.config.width,
       height: this.config.height,
       loop: this.config.loop,
             // preload : "metadata"
     });
-
-    // video.setAttribute('preload', 'auto');
-    video.setAttribute('x5-video-player-type', 'h5');
-    video.setAttribute('webkit-playsinline', 'true');
-    video.setAttribute('x-webkit-airplay', 'true');
-    video.setAttribute('playsinline', 'true');
-    video.setAttribute('x5-video-player-fullscreen', 'false');
-    video.setAttribute('crossorigin', 'anonymous');
-
-
         // initialize camera
     const camera = this.camera = new THREE.PerspectiveCamera(this.config.cameraFOV, this.config.aspect, 1, 1000);
     // camera.target = new THREE.Vector3(0, 0, 0);

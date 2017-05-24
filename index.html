@@ -4,31 +4,11 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=yes, minimum-scale=1.0, maximum-scale=5.0">
 		<style>
-			body {
-				background-color: #000000;
-				margin: 0px;
-				overflow: hidden;
-			}
 
-			#info {
-				position: absolute;
-				top: 0px; width: 100%;
-				color: #ffffff;
-				padding: 5px;
-				font-family:Monospace;
-				font-size:13px;
-				font-weight: bold;
-				text-align:center;
-			}
-
-			a {
-				color: #ffffff;
-			}
 		</style>
 	</head>
 	<body>
-
-		<div id="container"></div>
+		<button id="play" style="position: absolute">PLAY</button>
 		<script src="polyfill.min.js"></script>
 		<script src="three.js"></script>
 		<script src="webvr-polyfill.js"></script>
@@ -36,8 +16,11 @@
 		<script>
 
 		var player = new Player();
-		player.load('./mp4/chezhan.mp4').then(function(){
-		    player.play()
+		player.load('mp4/chezhan.mp4').then(function(){
+		    var button = document.getElementById('play')
+			button.addEventListener('click', function (){
+			    player.play();
+			});
 		});
 		</script>
 	</body>

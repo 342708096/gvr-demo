@@ -193,7 +193,7 @@ var EventEmitter = function () {
 var Player = function (_EventEmitter) {
   _inherits(Player, _EventEmitter);
 
-  function Player(container, config) {
+  function Player(container, video, config) {
     _classCallCheck(this, Player);
 
     var _this = _possibleConstructorReturn(this, (Player.__proto__ || Object.getPrototypeOf(Player)).call(this));
@@ -219,24 +219,25 @@ var Player = function (_EventEmitter) {
     };
     Object.assign(_this.config, config || {});
 
-    _this.lastRefresh = 0;
-    _this.deg = 45;
+    if (!video) {
+      video = _this.video = document.createElement('video');
+      video.setAttribute('preload', 'auto');
+      video.setAttribute('x5-video-player-type', 'h5');
+      video.setAttribute('webkit-playsinline', 'true');
+      video.setAttribute('x-webkit-airplay', 'true');
+      video.setAttribute('playsinline', 'true');
+      video.setAttribute('x5-video-player-fullscreen', 'true');
+      video.setAttribute('crossorigin', 'anonymous');
+    }
+
+    _this.video = video;
     // initialize video
-    var video = _this.video = document.createElement('video');
+
     Object.assign(_this.video, {
       width: _this.config.width,
       height: _this.config.height,
       loop: _this.config.loop
     });
-
-    // video.setAttribute('preload', 'auto');
-    video.setAttribute('x5-video-player-type', 'h5');
-    video.setAttribute('webkit-playsinline', 'true');
-    video.setAttribute('x-webkit-airplay', 'true');
-    video.setAttribute('playsinline', 'true');
-    video.setAttribute('x5-video-player-fullscreen', 'false');
-    video.setAttribute('crossorigin', 'anonymous');
-
     // initialize camera
     var camera = _this.camera = new THREE.PerspectiveCamera(_this.config.cameraFOV, _this.config.aspect, 1, 1000);
     // camera.target = new THREE.Vector3(0, 0, 0);
