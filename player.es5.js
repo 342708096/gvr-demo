@@ -229,7 +229,7 @@ var Player = function (_EventEmitter) {
       loop: _this.config.loop
     });
 
-    video.setAttribute('preload', 'auto');
+    // video.setAttribute('preload', 'auto');
     video.setAttribute('x5-video-player-type', 'h5');
     video.setAttribute('webkit-playsinline', 'true');
     video.setAttribute('x-webkit-airplay', 'true');
@@ -318,6 +318,7 @@ var Player = function (_EventEmitter) {
         var video = _this2.video;
         video.src = url;
         video.addEventListener('canplaythrough', resolve);
+        video.addEventListener('loadeddata', resolve);
         video.addEventListener('loadedmetadata', function () {
           _this2.emit('timeupdate', {
             currentTime: video.currentTime,

@@ -205,7 +205,7 @@ class Player extends EventEmitter {
             // preload : "metadata"
     });
 
-    video.setAttribute('preload', 'auto');
+    // video.setAttribute('preload', 'auto');
     video.setAttribute('x5-video-player-type', 'h5');
     video.setAttribute('webkit-playsinline', 'true');
     video.setAttribute('x-webkit-airplay', 'true');
@@ -291,6 +291,7 @@ class Player extends EventEmitter {
       const video = this.video;
       video.src = url;
       video.addEventListener('canplaythrough', resolve);
+      video.addEventListener('loadeddata', resolve);
       video.addEventListener('loadedmetadata', () => {
         this.emit('timeupdate', {
           currentTime: video.currentTime,
