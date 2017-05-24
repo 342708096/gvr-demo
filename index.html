@@ -36,7 +36,11 @@
 		<script>
 
 		var player = new Player();
-		player.load('./mp4/chezhan.mp4').then(function(){ player.play()});
+		player.load('./mp4/chezhan.mp4').then(function(){
+		    document.addEventListener('click' , function(){
+                player.play()
+			})
+		});
 		</script>
 	</body>
 </html>
