@@ -196,9 +196,10 @@ var Player = function (_EventEmitter) {
   function Player(container, config) {
     _classCallCheck(this, Player);
 
-    // initialize config
     var _this = _possibleConstructorReturn(this, (Player.__proto__ || Object.getPrototypeOf(Player)).call(this));
 
+    container = container || window.document.body;
+    // initialize config
     _this.config = {
       distance: 500,
       width: window.innerWidth,
