@@ -45,7 +45,7 @@
 
     document.getElementById('container').appendChild(video);
     video.src = './mp4/chezhan.mp4';
-    video.addEventListener('canplaythrough', function () {
+    video.addEventListener('loadeddata', function () {
         video.play();
     });
     video.load();
