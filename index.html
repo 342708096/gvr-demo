@@ -29,14 +29,14 @@
 	<body>
 
 		<div id="container"></div>
-
+		<script src="polyfill.min.js"></script>
 		<script src="three.js"></script>
 		<script src="webvr-polyfill.js"></script>
-		<script src="player.js"></script>
+		<script src="player.es5.js"></script>
 		<script>
 
 		const player = new Player(document.getElementById('container'));
-		player.load('./mp4/chezhan.mp4').then(() => player.play());
+		player.load('./mp4/chezhan.mp4').then(function(){ player.play()});
 
 		</script>
 	</body>
