@@ -36,7 +36,7 @@
     var video = document.getElementById('video');
     video.width = window.innerWidth;
     video.height = window.innerHeight;
-    video.addEventListener('loadeddata', function () {
+    video.addEventListener('canplaythrough', function () {
         video.play();
     });
     video.load();
