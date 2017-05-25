@@ -851,13 +851,13 @@ var Player = function (_EventEmitter) {
 
             return new Promise(function (resolve, reject) {
                 var video = _this2.video;
-                video.src = url;
-                video.addEventListener('canplaythrough', resolve);
-                video.addEventListener('loadeddata', resolve);
-                // var hls = new Hls();
-                // hls.loadSource(url);
-                // hls.attachMedia(video);
-                // hls.on(Hls.Events.MANIFEST_PARSED, resolve)
+                // video.src = url;
+                // video.addEventListener('canplaythrough', resolve);
+                // video.addEventListener('loadeddata', resolve);
+                var hls = new Hls();
+                hls.loadSource(url);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, resolve);
                 video.addEventListener('loadedmetadata', function () {
                     _this2.emit('timeupdate', {
                         currentTime: video.currentTime,
@@ -893,7 +893,7 @@ var Player = function (_EventEmitter) {
             texture.generateMipmaps = false;
             texture.needsUpdate = true;
 
-            texture.flipY = false;
+            // texture.flipY = false;
 
             function createPhotosphere_(texture, config) {
                 config = config || {};
@@ -919,21 +919,21 @@ var Player = function (_EventEmitter) {
                         uvs[i][j].y += p.offsetY;
                     }
                 }
-                var equirectFrag = 'uniform sampler2D tEquirect;\nuniform float tFlip;\nvarying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvec3 direction = normalize( vWorldPosition );\n\tvec2 sampleUV;\n\tsampleUV.y = saturate( tFlip * direction.y * -0.5 + 0.5 );\n\tsampleUV.x = atan( direction.z, direction.x ) * RECIPROCAL_PI2 + 0.5;\n\tgl_FragColor = texture2D( tEquirect, sampleUV ).bgra;\n}\n';
-
-                var equirectVert = 'varying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvWorldPosition = transformDirection( position, modelMatrix );\n\t#include <begin_vertex>\n\t#include <project_vertex>\n}\n';
-
-                var uniforms = {
-                    tEquirect: { value: texture },
-                    tFlip: { value: 1 }
-                };
-
-                var material = new THREE.ShaderMaterial({
-                    uniforms: uniforms,
-                    vertexShader: equirectVert,
-                    fragmentShader: equirectFrag
-                });
-                // const material = new THREE.MeshBasicMaterial({ map: texture });
+                // const equirectFrag = 'uniform sampler2D tEquirect;\nuniform float tFlip;\nvarying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvec3 direction = normalize( vWorldPosition );\n\tvec2 sampleUV;\n\tsampleUV.y = saturate( tFlip * direction.y * -0.5 + 0.5 );\n\tsampleUV.x = atan( direction.z, direction.x ) * RECIPROCAL_PI2 + 0.5;\n\tgl_FragColor = texture2D( tEquirect, sampleUV ).bgra;\n}\n';
+                //
+                // const equirectVert = 'varying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvWorldPosition = transformDirection( position, modelMatrix );\n\t#include <begin_vertex>\n\t#include <project_vertex>\n}\n';
+                //
+                // const uniforms = {
+                //   tEquirect: { value: texture },
+                //   tFlip: { value: 1 }
+                // };
+                //
+                // const material = new THREE.ShaderMaterial({
+                //   uniforms,
+                //   vertexShader: equirectVert,
+                //   fragmentShader: equirectFrag
+                // });
+                var material = new THREE.MeshBasicMaterial({ map: texture, overdraw: 0.5 });
                 var out = new THREE.Mesh(geometry, material);
                 //out.visible = false;
                 out.renderOrder = -1;
