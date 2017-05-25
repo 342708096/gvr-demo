@@ -900,6 +900,10 @@ class Player extends EventEmitter {
       video.src = url;
       video.addEventListener('canplaythrough', resolve);
       video.addEventListener('loadeddata', resolve);
+      // var hls = new Hls();
+      // hls.loadSource(url);
+      // hls.attachMedia(video);
+      // hls.on(Hls.Events.MANIFEST_PARSED, resolve)
       video.addEventListener('loadedmetadata', () => {
         this.emit('timeupdate', {
           currentTime: video.currentTime,
@@ -909,9 +913,9 @@ class Player extends EventEmitter {
       video.addEventListener('error', reject);
       video.load();
       const render_ = () => {
-      this.createSphereRenderer();
-      this.loopRender();
-       video.removeEventListener('play', render_);
+        this.createSphereRenderer();
+        this.loopRender();
+        video.removeEventListener('play', render_);
       };
       video.addEventListener('play', render_);
       // render_();
@@ -958,20 +962,20 @@ class Player extends EventEmitter {
                 uvs[i][j].y += p.offsetY;
             }
         }
-          const equirectFrag = 'uniform sampler2D tEquirect;\nuniform float tFlip;\nvarying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvec3 direction = normalize( vWorldPosition );\n\tvec2 sampleUV;\n\tsampleUV.y = saturate( tFlip * direction.y * -0.5 + 0.5 );\n\tsampleUV.x = atan( direction.z, direction.x ) * RECIPROCAL_PI2 + 0.5;\n\tgl_FragColor = texture2D( tEquirect, sampleUV ).bgra;\n}\n';
+        const equirectFrag = 'uniform sampler2D tEquirect;\nuniform float tFlip;\nvarying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvec3 direction = normalize( vWorldPosition );\n\tvec2 sampleUV;\n\tsampleUV.y = saturate( tFlip * direction.y * -0.5 + 0.5 );\n\tsampleUV.x = atan( direction.z, direction.x ) * RECIPROCAL_PI2 + 0.5;\n\tgl_FragColor = texture2D( tEquirect, sampleUV ).bgra;\n}\n';
 
-          const equirectVert = 'varying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvWorldPosition = transformDirection( position, modelMatrix );\n\t#include <begin_vertex>\n\t#include <project_vertex>\n}\n';
+        const equirectVert = 'varying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvWorldPosition = transformDirection( position, modelMatrix );\n\t#include <begin_vertex>\n\t#include <project_vertex>\n}\n';
 
-          const uniforms = {
-            tEquirect: { value: texture },
-            tFlip: { value: 1 }
-          };
+        const uniforms = {
+          tEquirect: { value: texture },
+          tFlip: { value: 1 }
+        };
 
-          const material = new THREE.ShaderMaterial({
-            uniforms,
-            vertexShader: equirectVert,
-            fragmentShader: equirectFrag
-          });
+        const material = new THREE.ShaderMaterial({
+          uniforms,
+          vertexShader: equirectVert,
+          fragmentShader: equirectFrag
+        });
         // const material = new THREE.MeshBasicMaterial({ map: texture });
         const out = new THREE.Mesh(geometry, material);
         //out.visible = false;
@@ -1004,8 +1008,12 @@ class Player extends EventEmitter {
 
   loopRender() {
     requestAnimationFrame(this.loopRender.bind(this));
-    this.controls.update();
-    this.effect.render(this.scene, this.camera);
+    try {
+      this.controls.update();
+      this.effect.render(this.scene, this.camera);
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   // updateCameraPosition(x, y, z) {

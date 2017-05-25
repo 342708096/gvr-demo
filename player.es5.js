@@ -854,6 +854,10 @@ var Player = function (_EventEmitter) {
                 video.src = url;
                 video.addEventListener('canplaythrough', resolve);
                 video.addEventListener('loadeddata', resolve);
+                // var hls = new Hls();
+                // hls.loadSource(url);
+                // hls.attachMedia(video);
+                // hls.on(Hls.Events.MANIFEST_PARSED, resolve)
                 video.addEventListener('loadedmetadata', function () {
                     _this2.emit('timeupdate', {
                         currentTime: video.currentTime,
@@ -962,8 +966,12 @@ var Player = function (_EventEmitter) {
         key: 'loopRender',
         value: function loopRender() {
             requestAnimationFrame(this.loopRender.bind(this));
-            this.controls.update();
-            this.effect.render(this.scene, this.camera);
+            try {
+                this.controls.update();
+                this.effect.render(this.scene, this.camera);
+            } catch (e) {
+                console.error(e);
+            }
         }
 
         // updateCameraPosition(x, y, z) {
