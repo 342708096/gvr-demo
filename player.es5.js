@@ -658,12 +658,11 @@ var Player = function (_EventEmitter) {
         // initialize config
         _this.config = {
             distance: 500,
-            width: window.innerWidth,
-            height: window.innerHeight,
-            aspect: 2,
+            width: 640,
+            height: 360,
             loop: true,
-            zoom: 1.5,
-            cameraFOV: 45,
+            zoom: 1,
+            cameraFOV: 50,
             scaleX: 1,
             scaleY: 1,
             offsetX: 0,
@@ -677,7 +676,7 @@ var Player = function (_EventEmitter) {
 
         if (!video) {
             video = _this.video = document.createElement('video');
-            video.setAttribute('preload', 'auto');
+            video.setAttribute('preload', 'metadata');
             video.setAttribute('x5-video-player-type', 'h5');
             video.setAttribute('webkit-playsinline', 'true');
             video.setAttribute('x-webkit-airplay', 'true');
@@ -695,11 +694,16 @@ var Player = function (_EventEmitter) {
             loop: _this.config.loop
         });
         // initialize camera
-        var camera = _this.camera = new THREE.PerspectiveCamera(_this.config.cameraFOV, _this.config.aspect, 1, 1000);
+        var camera = _this.camera = new THREE.PerspectiveCamera(_this.config.cameraFOV, _this.config.width / _this.config.height, 0.1, 1100);
         // camera.target = new THREE.Vector3(0, 0, 0);
         camera.zoom = _this.config.zoom;
         // camera.rotation.reorder('YXZ');
         camera.layers.enable(1);
+
+        camera.target = new THREE.Vector3(0, 0, 0);
+        camera.rotation.reorder('YXZ');
+        camera.position.x = Math.PI / 2;
+
         // camera.updateProjectionMatrix();
         var cameraDummy = _this.cameraParent = new THREE.Object3D();
         cameraDummy.add(camera);
@@ -708,9 +712,9 @@ var Player = function (_EventEmitter) {
 
         // initialize renderer
         var renderer = _this.renderer = new THREE.WebGLRenderer({ antialias: false }); // 关闭抗锯齿以提高性能
-        renderer.setClearColor(0x000000, 0);
+        // renderer.setClearColor(0x000000, 0);
         renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.setSize(_this.video.width, _this.video.height);
+
         container.appendChild(renderer.domElement);
         //  effect
 
@@ -728,24 +732,32 @@ var Player = function (_EventEmitter) {
         var photoGroup = new THREE.Object3D();
         photoGroup.name = 'photo';
         scene.add(photoGroup);
-        scene.add(camera.parent);
+        scene.add(camera);
+        _this.onVideoResize();
         return _this;
     }
 
     _createClass(Player, [{
+        key: 'onVideoResize',
+        value: function onVideoResize() {
+            this.camera.aspect = this.video.width / this.video.height;
+            this.camera.updateProjectionMatrix();
+            this.renderer.setSize(this.video.width, this.video.height);
+        }
+    }, {
         key: 'load',
         value: function load(url) {
             var _this2 = this;
 
             return new Promise(function (resolve, reject) {
                 var video = _this2.video;
-                // video.src = url;
-                // video.addEventListener('canplaythrough', resolve);
-                // video.addEventListener('loadeddata', resolve);
-                var hls = new Hls();
-                hls.loadSource(url);
-                hls.attachMedia(video);
-                hls.on(Hls.Events.MANIFEST_PARSED, resolve);
+                video.src = url;
+                video.addEventListener('canplaythrough', resolve);
+                video.addEventListener('loadeddata', resolve);
+                // const hls = new Hls();
+                // hls.loadSource(url);
+                // hls.attachMedia(video);
+                // hls.on(Hls.Events.MANIFEST_PARSED, resolve);
                 video.addEventListener('loadedmetadata', function () {
                     _this2.emit('timeupdate', {
                         currentTime: video.currentTime,
@@ -781,7 +793,7 @@ var Player = function (_EventEmitter) {
             texture.generateMipmaps = false;
             texture.needsUpdate = true;
 
-            // texture.flipY = false;
+            texture.flipY = false;
 
             function createPhotosphere_(texture, config) {
                 config = config || {};
@@ -796,44 +808,57 @@ var Player = function (_EventEmitter) {
                     thetaLength: config.thetaLength || Math.PI
                 };
 
-                var geometry = new THREE.SphereGeometry(100, 64, 45, p.phiStart, p.phiLength, p.thetaStart, p.thetaLength);
+                var geometry = new THREE.SphereBufferGeometry(200, 64, 44, p.phiStart, p.phiLength, p.thetaStart, p.thetaLength);
+                // geometry.scale(-1, 1, 1);
                 geometry.applyMatrix(new THREE.Matrix4().makeScale(-1, 1, 1));
-                var uvs = geometry.faceVertexUvs[0];
-                for (var i = 0; i < uvs.length; i++) {
-                    for (var j = 0; j < 3; j++) {
-                        uvs[i][j].x *= p.scaleX;
-                        uvs[i][j].x += p.offsetX;
-                        uvs[i][j].y *= p.scaleY;
-                        uvs[i][j].y += p.offsetY;
-                    }
-                }
-                // const equirectFrag = 'uniform sampler2D tEquirect;\nuniform float tFlip;\nvarying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvec3 direction = normalize( vWorldPosition );\n\tvec2 sampleUV;\n\tsampleUV.y = saturate( tFlip * direction.y * -0.5 + 0.5 );\n\tsampleUV.x = atan( direction.z, direction.x ) * RECIPROCAL_PI2 + 0.5;\n\tgl_FragColor = texture2D( tEquirect, sampleUV ).bgra;\n}\n';
-                //
-                // const equirectVert = 'varying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvWorldPosition = transformDirection( position, modelMatrix );\n\t#include <begin_vertex>\n\t#include <project_vertex>\n}\n';
-                //
-                // const uniforms = {
-                //   tEquirect: { value: texture },
-                //   tFlip: { value: 1 }
-                // };
-                //
-                // const material = new THREE.ShaderMaterial({
-                //   uniforms,
-                //   vertexShader: equirectVert,
-                //   fragmentShader: equirectFrag
-                // });
-                // const material = new THREE.MeshBasicMaterial({ map: texture ,  overdraw: 0.5});
+                // const uvs = geometry.faceVertexUvs[0];
+                // for (let i = 0; i < uvs.length; i++) {
+                //     for (let j = 0; j < 3; j++) {
+                //         uvs[i][j].x *= p.scaleX;
+                //         uvs[i][j].x += p.offsetX;
+                //         uvs[i][j].y *= p.scaleY;
+                //         uvs[i][j].y += p.offsetY;
+                //     }
+                // }
+                var equirectFrag = 'uniform sampler2D tEquirect;\nuniform float tFlip;\nvarying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvec3 direction = normalize( vWorldPosition );\n\tvec2 sampleUV;\n\tsampleUV.y = saturate( tFlip * direction.y * -0.5 + 0.5 );\n\tsampleUV.x = atan( direction.z, direction.x ) * RECIPROCAL_PI2 + 0.5;\n\tgl_FragColor = texture2D( tEquirect, sampleUV ).bgra;\n}\n';
+
+                var equirectVert = 'varying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvWorldPosition = transformDirection( position, modelMatrix );\n\t#include <begin_vertex>\n\t#include <project_vertex>\n}\n';
+
+                var uniforms = {
+                    tEquirect: { value: texture },
+                    tFlip: { value: 1 }
+                };
 
                 var material = new THREE.ShaderMaterial({
-                    uniforms: {
-                        texture: { value: texture }
-                    },
-                    vertexShader: ['varying vec2 vUV;', 'void main() {', '	vUV = vec2( uv.x, uv.y );', '	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );', '}'].join('\n'),
-                    fragmentShader: ['uniform sampler2D texture;', 'varying vec2 vUV;', 'void main() {', ' gl_FragColor = texture2D( texture, vUV  ).bgra;', '}'].join('\n')
+                    uniforms: uniforms,
+                    vertexShader: equirectVert,
+                    fragmentShader: equirectFrag
                 });
+                // const material = new THREE.MeshBasicMaterial({ map: texture ,  overdraw: 0.5});
+
+                // const material = new THREE.ShaderMaterial({
+                //   uniforms: {
+                //       texture: { value: texture }
+                //   },
+                //   vertexShader: [
+                //       'varying vec2 vUV;',
+                //       'void main() {',
+                //       '	vUV = vec2( uv.x, uv.y );',
+                //       '	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );',
+                //       '}'
+                //   ].join('\n'),
+                //   fragmentShader: [
+                //       'uniform sampler2D texture;',
+                //       'varying vec2 vUV;',
+                //       'void main() {',
+                //       ' gl_FragColor = texture2D( texture, vUV  ).bgra;',
+                //       '}'
+                //   ].join('\n')
+                // });
                 // const material = new THREE.MeshLambertMaterial({map: texture});
                 var out = new THREE.Mesh(geometry, material);
                 // out.visible = false;
-                out.renderOrder = -1;
+                // out.renderOrder = -1;
                 return out;
             }
 
