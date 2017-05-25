@@ -18,6 +18,7 @@
     "THREE": true
   },
   "rules": {
+    "indent": 0,
     "arrow-parens": 0,
     "class-methods-use-this": 0,
     "compat/compat": 2,

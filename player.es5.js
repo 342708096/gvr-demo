@@ -191,36 +191,29 @@ var EventEmitter = function () {
 }();
 
 THREE.VREffect = function (renderer, onError) {
-
-    var vrDisplay, vrDisplays;
+    var vrDisplay = void 0,
+        vrDisplays = void 0;
     var eyeTranslationL = new THREE.Vector3();
     var eyeTranslationR = new THREE.Vector3();
-    var renderRectL, renderRectR;
+    var renderRectL = void 0,
+        renderRectR = void 0;
 
     var frameData = null;
 
     if ('VRFrameData' in window) {
-
         frameData = new window.VRFrameData();
     }
 
     function gotVRDisplays(displays) {
-
         vrDisplays = displays;
 
         if (displays.length > 0) {
-
             vrDisplay = displays[0];
-        } else {
-
-            if (onError) onError('HMD not available');
-        }
+        } else if (onError) onError('HMD not available');
     }
 
     if (navigator.getVRDisplays) {
-
         navigator.getVRDisplays().then(gotVRDisplays).catch(function () {
-
             console.warn('THREE.VREffect: Unable to get VR Displays');
         });
     }
@@ -236,33 +229,27 @@ THREE.VREffect = function (renderer, onError) {
     var rendererPixelRatio = renderer.getPixelRatio();
 
     this.getVRDisplay = function () {
-
         return vrDisplay;
     };
 
     this.setVRDisplay = function (value) {
-
         vrDisplay = value;
     };
 
     this.getVRDisplays = function () {
-
         console.warn('THREE.VREffect: getVRDisplays() is being deprecated.');
         return vrDisplays;
     };
 
     this.setSize = function (width, height, updateStyle) {
-
         rendererSize = { width: width, height: height };
         rendererUpdateStyle = updateStyle;
 
         if (scope.isPresenting) {
-
             var eyeParamsL = vrDisplay.getEyeParameters('left');
             renderer.setPixelRatio(1);
             renderer.setSize(eyeParamsL.renderWidth * 2, eyeParamsL.renderHeight, false);
         } else {
-
             renderer.setPixelRatio(rendererPixelRatio);
             renderer.setSize(width, height, updateStyle);
         }
@@ -275,18 +262,15 @@ THREE.VREffect = function (renderer, onError) {
     var defaultRightBounds = [0.5, 0.0, 0.5, 1.0];
 
     function onVRDisplayPresentChange() {
-
         var wasPresenting = scope.isPresenting;
         scope.isPresenting = vrDisplay !== undefined && vrDisplay.isPresenting;
 
         if (scope.isPresenting) {
-
             var eyeParamsL = vrDisplay.getEyeParameters('left');
             var eyeWidth = eyeParamsL.renderWidth;
             var eyeHeight = eyeParamsL.renderHeight;
 
             if (!wasPresenting) {
-
                 rendererPixelRatio = renderer.getPixelRatio();
                 rendererSize = renderer.getSize();
 
@@ -294,7 +278,6 @@ THREE.VREffect = function (renderer, onError) {
                 renderer.setSize(eyeWidth * 2, eyeHeight, false);
             }
         } else if (wasPresenting) {
-
             renderer.setPixelRatio(rendererPixelRatio);
             renderer.setSize(rendererSize.width, rendererSize.height, rendererUpdateStyle);
         }
@@ -303,67 +286,51 @@ THREE.VREffect = function (renderer, onError) {
     window.addEventListener('vrdisplaypresentchange', onVRDisplayPresentChange, false);
 
     this.setFullScreen = function (boolean) {
-
         return new Promise(function (resolve, reject) {
-
             if (vrDisplay === undefined) {
-
                 reject(new Error('No VR hardware found.'));
                 return;
             }
 
             if (scope.isPresenting === boolean) {
-
                 resolve();
                 return;
             }
 
             if (boolean) {
-
                 resolve(vrDisplay.requestPresent([{ source: canvas }]));
             } else {
-
                 resolve(vrDisplay.exitPresent());
             }
         });
     };
 
     this.requestPresent = function () {
-
         return this.setFullScreen(true);
     };
 
     this.exitPresent = function () {
-
         return this.setFullScreen(false);
     };
 
     this.requestAnimationFrame = function (f) {
-
         if (vrDisplay !== undefined) {
-
             return vrDisplay.requestAnimationFrame(f);
         } else {
-
             return window.requestAnimationFrame(f);
         }
     };
 
     this.cancelAnimationFrame = function (h) {
-
         if (vrDisplay !== undefined) {
-
             vrDisplay.cancelAnimationFrame(h);
         } else {
-
             window.cancelAnimationFrame(h);
         }
     };
 
     this.submitFrame = function () {
-
         if (vrDisplay !== undefined && scope.isPresenting) {
-
             vrDisplay.submitFrame();
         }
     };
@@ -379,13 +346,10 @@ THREE.VREffect = function (renderer, onError) {
     cameraR.layers.enable(2);
 
     this.render = function (scene, camera, renderTarget, forceClear) {
-
         if (vrDisplay && scope.isPresenting) {
-
             var autoUpdate = scene.autoUpdate;
 
             if (autoUpdate) {
-
                 scene.updateMatrixWorld();
                 scene.autoUpdate = false;
             }
@@ -397,7 +361,6 @@ THREE.VREffect = function (renderer, onError) {
             eyeTranslationR.fromArray(eyeParamsR.offset);
 
             if (Array.isArray(scene)) {
-
                 console.warn('THREE.VREffect.render() no longer supports arrays. Use object.layers instead.');
                 scene = scene[0];
             }
@@ -406,17 +369,15 @@ THREE.VREffect = function (renderer, onError) {
             // of the backbuffer is.
             var size = renderer.getSize();
             var layers = vrDisplay.getLayers();
-            var leftBounds;
-            var rightBounds;
+            var leftBounds = void 0;
+            var rightBounds = void 0;
 
             if (layers.length) {
-
                 var layer = layers[0];
 
                 leftBounds = layer.leftBounds !== null && layer.leftBounds.length === 4 ? layer.leftBounds : defaultLeftBounds;
                 rightBounds = layer.rightBounds !== null && layer.rightBounds.length === 4 ? layer.rightBounds : defaultRightBounds;
             } else {
-
                 leftBounds = defaultLeftBounds;
                 rightBounds = defaultRightBounds;
             }
@@ -435,11 +396,9 @@ THREE.VREffect = function (renderer, onError) {
             };
 
             if (renderTarget) {
-
                 renderer.setRenderTarget(renderTarget);
                 renderTarget.scissorTest = true;
             } else {
-
                 renderer.setRenderTarget(null);
                 renderer.setScissorTest(true);
             }
@@ -458,7 +417,6 @@ THREE.VREffect = function (renderer, onError) {
             cameraR.translateOnAxis(eyeTranslationR, cameraR.scale.x);
 
             if (vrDisplay.getFrameData) {
-
                 vrDisplay.depthNear = camera.near;
                 vrDisplay.depthFar = camera.far;
 
@@ -467,18 +425,15 @@ THREE.VREffect = function (renderer, onError) {
                 cameraL.projectionMatrix.elements = frameData.leftProjectionMatrix;
                 cameraR.projectionMatrix.elements = frameData.rightProjectionMatrix;
             } else {
-
                 cameraL.projectionMatrix = fovToProjection(eyeParamsL.fieldOfView, true, camera.near, camera.far);
                 cameraR.projectionMatrix = fovToProjection(eyeParamsR.fieldOfView, true, camera.near, camera.far);
             }
 
             // render left eye
             if (renderTarget) {
-
                 renderTarget.viewport.set(renderRectL.x, renderRectL.y, renderRectL.width, renderRectL.height);
                 renderTarget.scissor.set(renderRectL.x, renderRectL.y, renderRectL.width, renderRectL.height);
             } else {
-
                 renderer.setViewport(renderRectL.x, renderRectL.y, renderRectL.width, renderRectL.height);
                 renderer.setScissor(renderRectL.x, renderRectL.y, renderRectL.width, renderRectL.height);
             }
@@ -486,35 +441,29 @@ THREE.VREffect = function (renderer, onError) {
 
             // render right eye
             if (renderTarget) {
-
                 renderTarget.viewport.set(renderRectR.x, renderRectR.y, renderRectR.width, renderRectR.height);
                 renderTarget.scissor.set(renderRectR.x, renderRectR.y, renderRectR.width, renderRectR.height);
             } else {
-
                 renderer.setViewport(renderRectR.x, renderRectR.y, renderRectR.width, renderRectR.height);
                 renderer.setScissor(renderRectR.x, renderRectR.y, renderRectR.width, renderRectR.height);
             }
             renderer.render(scene, cameraR, renderTarget, forceClear);
 
             if (renderTarget) {
-
                 renderTarget.viewport.set(0, 0, size.width, size.height);
                 renderTarget.scissor.set(0, 0, size.width, size.height);
                 renderTarget.scissorTest = false;
                 renderer.setRenderTarget(null);
             } else {
-
                 renderer.setViewport(0, 0, size.width, size.height);
                 renderer.setScissorTest(false);
             }
 
             if (autoUpdate) {
-
                 scene.autoUpdate = true;
             }
 
             if (scope.autoSubmitFrame) {
-
                 scope.submitFrame();
             }
 
@@ -527,14 +476,12 @@ THREE.VREffect = function (renderer, onError) {
     };
 
     this.dispose = function () {
-
         window.removeEventListener('vrdisplaypresentchange', onVRDisplayPresentChange, false);
     };
 
     //
 
     function fovToNDCScaleOffset(fov) {
-
         var pxscale = 2.0 / (fov.leftTan + fov.rightTan);
         var pxoffset = (fov.leftTan - fov.rightTan) * pxscale * 0.5;
         var pyscale = 2.0 / (fov.upTan + fov.downTan);
@@ -543,7 +490,6 @@ THREE.VREffect = function (renderer, onError) {
     }
 
     function fovPortToProjection(fov, rightHanded, zNear, zFar) {
-
         rightHanded = rightHanded === undefined ? true : rightHanded;
         zNear = zNear === undefined ? 0.01 : zNear;
         zFar = zFar === undefined ? 10000.0 : zFar;
@@ -588,7 +534,6 @@ THREE.VREffect = function (renderer, onError) {
     }
 
     function fovToProjection(fov, rightHanded, zNear, zFar) {
-
         var DEG2RAD = Math.PI / 180.0;
 
         var fovPort = {
@@ -602,37 +547,29 @@ THREE.VREffect = function (renderer, onError) {
     }
 };
 THREE.VRControls = function (object, onError) {
-
     var scope = this;
 
-    var vrDisplay, vrDisplays;
+    var vrDisplay = void 0,
+        vrDisplays = void 0;
 
     var standingMatrix = new THREE.Matrix4();
 
     var frameData = null;
 
     if ('VRFrameData' in window) {
-
         frameData = new VRFrameData();
     }
 
     function gotVRDisplays(displays) {
-
         vrDisplays = displays;
 
         if (displays.length > 0) {
-
             vrDisplay = displays[0];
-        } else {
-
-            if (onError) onError('VR input not available.');
-        }
+        } else if (onError) onError('VR input not available.');
     }
 
     if (navigator.getVRDisplays) {
-
         navigator.getVRDisplays().then(gotVRDisplays).catch(function () {
-
             console.warn('THREE.VRControls: Unable to get VR Displays');
         });
     }
@@ -652,64 +589,50 @@ THREE.VRControls = function (object, onError) {
     this.userHeight = 1.6;
 
     this.getVRDisplay = function () {
-
         return vrDisplay;
     };
 
     this.setVRDisplay = function (value) {
-
         vrDisplay = value;
     };
 
     this.getVRDisplays = function () {
-
         console.warn('THREE.VRControls: getVRDisplays() is being deprecated.');
         return vrDisplays;
     };
 
     this.getStandingMatrix = function () {
-
         return standingMatrix;
     };
 
     this.update = function () {
-
         if (vrDisplay) {
-
-            var pose;
+            var pose = void 0;
 
             if (vrDisplay.getFrameData) {
-
                 vrDisplay.getFrameData(frameData);
                 pose = frameData.pose;
             } else if (vrDisplay.getPose) {
-
                 pose = vrDisplay.getPose();
             }
 
             if (pose.orientation !== null) {
-
                 object.quaternion.fromArray(pose.orientation);
             }
 
             if (pose.position !== null) {
-
                 object.position.fromArray(pose.position);
             } else {
-
                 object.position.set(0, 0, 0);
             }
 
             if (this.standing) {
-
                 if (vrDisplay.stageParameters) {
-
                     object.updateMatrix();
 
                     standingMatrix.fromArray(vrDisplay.stageParameters.sittingToStandingTransform);
                     object.applyMatrix(standingMatrix);
                 } else {
-
                     object.position.setY(object.position.y + this.userHeight);
                 }
             }
@@ -719,7 +642,6 @@ THREE.VRControls = function (object, onError) {
     };
 
     this.dispose = function () {
-
         vrDisplay = null;
     };
 };
@@ -746,7 +668,7 @@ var Player = function (_EventEmitter) {
             scaleY: 1,
             offsetX: 0,
             offsetY: 0,
-            phiStart: Math.PI / 180 * 90, //90deg
+            phiStart: Math.PI / 180 * 90, // 90deg
             phiLength: Math.PI * 2,
             thetaStart: 0,
             thetaLength: Math.PI
@@ -785,7 +707,7 @@ var Player = function (_EventEmitter) {
         var controls = _this.controls = new THREE.VRControls(camera);
 
         // initialize renderer
-        var renderer = _this.renderer = new THREE.WebGLRenderer({ antialias: false }); //关闭抗锯齿以提高性能
+        var renderer = _this.renderer = new THREE.WebGLRenderer({ antialias: false }); // 关闭抗锯齿以提高性能
         renderer.setClearColor(0x000000, 0);
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.setSize(_this.video.width, _this.video.height);
@@ -807,40 +729,6 @@ var Player = function (_EventEmitter) {
         photoGroup.name = 'photo';
         scene.add(photoGroup);
         scene.add(camera.parent);
-
-        //     // initialize geometry
-        // const geometry = this.geometry = new THREE.SphereBufferGeometry(500, 64, 44);
-        // geometry.scale(-1, 1, 1);
-        //
-        //     // initialize texture
-        // const texture = this.texture = new THREE.VideoTexture(video);
-        // texture.minFilter = THREE.LinearFilter;
-        // texture.magFilter = THREE.LinearFilter;
-        // texture.format = THREE.RGBAFormat; // THREE.RGAFormat
-        // texture.generateMipmaps = false;
-        // texture.flipY = false;
-        // texture.needsUpdate = true;
-        //
-        //     // initialize mesh
-        // const equirectFrag = 'uniform sampler2D tEquirect;\nuniform float tFlip;\nvarying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvec3 direction = normalize( vWorldPosition );\n\tvec2 sampleUV;\n\tsampleUV.y = saturate( tFlip * direction.y * -0.5 + 0.5 );\n\tsampleUV.x = atan( direction.z, direction.x ) * RECIPROCAL_PI2 + 0.5;\n\tgl_FragColor = texture2D( tEquirect, sampleUV ).bgra;\n}\n';
-        //
-        // const equirectVert = 'varying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvWorldPosition = transformDirection( position, modelMatrix );\n\t#include <begin_vertex>\n\t#include <project_vertex>\n}\n';
-        //
-        // const uniforms = {
-        //   tEquirect: { value: texture },
-        //   tFlip: { value: 1 }
-        // };
-        //
-        // const material = new THREE.ShaderMaterial({
-        //   uniforms,
-        //   vertexShader: equirectVert,
-        //   fragmentShader: equirectFrag
-        // });
-        //
-        // const mesh = new THREE.Mesh(geometry, material);
-        //
-        // scene.add(mesh);
-
         return _this;
     }
 
@@ -851,13 +739,13 @@ var Player = function (_EventEmitter) {
 
             return new Promise(function (resolve, reject) {
                 var video = _this2.video;
-                // video.src = url;
-                // video.addEventListener('canplaythrough', resolve);
-                // video.addEventListener('loadeddata', resolve);
-                var hls = new Hls();
-                hls.loadSource(url);
-                hls.attachMedia(video);
-                hls.on(Hls.Events.MANIFEST_PARSED, resolve);
+                video.src = url;
+                video.addEventListener('canplaythrough', resolve);
+                video.addEventListener('loadeddata', resolve);
+                // const hls = new Hls();
+                // hls.loadSource(url);
+                // hls.attachMedia(video);
+                // hls.on(Hls.Events.MANIFEST_PARSED, resolve);
                 video.addEventListener('loadedmetadata', function () {
                     _this2.emit('timeupdate', {
                         currentTime: video.currentTime,
@@ -885,7 +773,7 @@ var Player = function (_EventEmitter) {
     }, {
         key: 'createSphereRenderer',
         value: function createSphereRenderer() {
-            //texture
+            // texture
             var texture = this.texture = new THREE.VideoTexture(this.video);
             texture.minFilter = THREE.LinearFilter;
             texture.magFilter = THREE.LinearFilter;
@@ -893,7 +781,7 @@ var Player = function (_EventEmitter) {
             texture.generateMipmaps = false;
             texture.needsUpdate = true;
 
-            // texture.flipY = false;
+            texture.flipY = false;
 
             function createPhotosphere_(texture, config) {
                 config = config || {};
@@ -933,9 +821,18 @@ var Player = function (_EventEmitter) {
                 //   vertexShader: equirectVert,
                 //   fragmentShader: equirectFrag
                 // });
-                var material = new THREE.MeshBasicMaterial({ map: texture, overdraw: 0.5 });
+                // const material = new THREE.MeshBasicMaterial({ map: texture ,  overdraw: 0.5});
+
+                var material = new THREE.ShaderMaterial({
+                    uniforms: {
+                        texture: { value: texture }
+                    },
+                    vertexShader: ['varying vec2 vUV;', 'void main() {', '	vUV = vec2( uv.x, 1.0 - uv.y );', '	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );', '}'].join('\n'),
+                    fragmentShader: ['uniform sampler2D texture;', 'varying vec2 vUV;', 'void main() {', ' gl_FragColor = texture2D( texture, vUV  ).bgra;', '}'].join('\n')
+                });
+                // const material = new THREE.MeshLambertMaterial({map: texture});
                 var out = new THREE.Mesh(geometry, material);
-                //out.visible = false;
+                // out.visible = false;
                 out.renderOrder = -1;
                 return out;
             }
