@@ -708,13 +708,13 @@ class Player extends EventEmitter {
   load(url) {
     return new Promise((resolve, reject) => {
       const video = this.video;
-      video.src = url;
-      video.addEventListener('canplaythrough', resolve);
-      video.addEventListener('loadeddata', resolve);
-      // const hls = new Hls();
-      // hls.loadSource(url);
-      // hls.attachMedia(video);
-      // hls.on(Hls.Events.MANIFEST_PARSED, resolve);
+      // video.src = url;
+      // video.addEventListener('canplaythrough', resolve);
+      // video.addEventListener('loadeddata', resolve);
+      const hls = new Hls();
+      hls.loadSource(url);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, resolve);
       video.addEventListener('loadedmetadata', () => {
         this.emit('timeupdate', {
           currentTime: video.currentTime,
@@ -746,7 +746,7 @@ class Player extends EventEmitter {
       texture.generateMipmaps = false;
       texture.needsUpdate = true;
 
-      texture.flipY = false;
+      // texture.flipY = false;
 
       function createPhotosphere_(texture, config) {
         config = config || {};
@@ -796,7 +796,7 @@ class Player extends EventEmitter {
           vertexShader: [
               'varying vec2 vUV;',
               'void main() {',
-              '	vUV = vec2( uv.x, 1.0 - uv.y );',
+              '	vUV = vec2( uv.x, uv.y );',
               '	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );',
               '}'
           ].join('\n'),

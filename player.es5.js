@@ -739,13 +739,13 @@ var Player = function (_EventEmitter) {
 
             return new Promise(function (resolve, reject) {
                 var video = _this2.video;
-                video.src = url;
-                video.addEventListener('canplaythrough', resolve);
-                video.addEventListener('loadeddata', resolve);
-                // const hls = new Hls();
-                // hls.loadSource(url);
-                // hls.attachMedia(video);
-                // hls.on(Hls.Events.MANIFEST_PARSED, resolve);
+                // video.src = url;
+                // video.addEventListener('canplaythrough', resolve);
+                // video.addEventListener('loadeddata', resolve);
+                var hls = new Hls();
+                hls.loadSource(url);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, resolve);
                 video.addEventListener('loadedmetadata', function () {
                     _this2.emit('timeupdate', {
                         currentTime: video.currentTime,
@@ -781,7 +781,7 @@ var Player = function (_EventEmitter) {
             texture.generateMipmaps = false;
             texture.needsUpdate = true;
 
-            texture.flipY = false;
+            // texture.flipY = false;
 
             function createPhotosphere_(texture, config) {
                 config = config || {};
@@ -827,7 +827,7 @@ var Player = function (_EventEmitter) {
                     uniforms: {
                         texture: { value: texture }
                     },
-                    vertexShader: ['varying vec2 vUV;', 'void main() {', '	vUV = vec2( uv.x, 1.0 - uv.y );', '	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );', '}'].join('\n'),
+                    vertexShader: ['varying vec2 vUV;', 'void main() {', '	vUV = vec2( uv.x, uv.y );', '	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );', '}'].join('\n'),
                     fragmentShader: ['uniform sampler2D texture;', 'varying vec2 vUV;', 'void main() {', ' gl_FragColor = texture2D( texture, vUV  ).bgra;', '}'].join('\n')
                 });
                 // const material = new THREE.MeshLambertMaterial({map: texture});

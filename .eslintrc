@@ -15,7 +15,8 @@
   "globals": {
     "window": true,
     "document": true,
-    "THREE": true
+    "THREE": true,
+    "Hls": true
   },
   "rules": {
     "indent": 0,
