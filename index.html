@@ -6,12 +6,12 @@
 	</head>
 	<body style="margin:0">
 		<button id="play" style="position: absolute" onclick="player.play()">PLAY</button>
-		<video id="video" webkit-playsinline="true"
-			   x5-video-player-type="h5"
-			   x5-video-player-fullscreen="true"
-			   playsinline="true"
-			   crossorigin="anonymous"
-			   preload="auto" style="display:none" loop="" ></video>
+		<!--<video id="video" webkit-playsinline="true"-->
+			   <!--x5-video-player-type="h5"-->
+			   <!--x5-video-player-fullscreen="true"-->
+			   <!--playsinline="true"-->
+			   <!--crossorigin="anonymous"-->
+			   <!--preload="auto" style="display:none" loop="" ></video>-->
 		<script src="//cdn.bootcss.com/hls.js/0.7.7/hls.js"></script>
 		<script src="//cdn.bootcss.com/hls.js/0.7.7/hls.light.js"></script>
 		<script src="polyfill.min.js"></script>
@@ -20,7 +20,8 @@
 		<script src="player.es5.js"></script>
 		<script>
 
-		var player = new Player(null, document.getElementById('video'));
+//		var player = new Player(null, document.getElementById('video'));
+		var player = new Player();
 		player.load('hls/cd02_ld.m3u8');
 //			player.load('mp4/chezhan.mp4');
 		</script>
