@@ -649,17 +649,18 @@ THREE.VRControls = function (object, onError) {
 var Player = function (_EventEmitter) {
     _inherits(Player, _EventEmitter);
 
-    function Player(container, video, config) {
+    function Player(src, container, config) {
         _classCallCheck(this, Player);
 
         var _this = _possibleConstructorReturn(this, (Player.__proto__ || Object.getPrototypeOf(Player)).call(this));
 
-        container = container || window.document.body;
+        _this.lastRefresh = 0;
+        _this.container = container || window.document.body;
         // initialize config
         _this.config = {
             distance: 500,
-            width: 640,
-            height: 360,
+            width: window.innerWidth,
+            height: window.innerHeight,
             loop: true,
             zoom: 1,
             cameraFOV: 50,
@@ -674,203 +675,194 @@ var Player = function (_EventEmitter) {
         };
         Object.assign(_this.config, config || {});
 
-        if (!video) {
-            video = _this.video = document.createElement('video');
-            video.setAttribute('preload', 'metadata');
-            video.setAttribute('x5-video-player-type', 'h5');
-            video.setAttribute('webkit-playsinline', 'true');
-            video.setAttribute('x-webkit-airplay', 'true');
-            video.setAttribute('playsinline', 'true');
-            video.setAttribute('x5-video-player-fullscreen', 'true');
-            video.setAttribute('crossorigin', 'anonymous');
-        }
+        var video = _this.video = document.createElement('video');
+        video.setAttribute('preload', 'auto');
+        video.setAttribute('x5-video-player-type', 'h5');
+        video.setAttribute('webkit-playsinline', 'true');
+        video.setAttribute('x-webkit-airplay', 'allow');
+        video.setAttribute('playsinline', 'true');
+        video.setAttribute('x5-video-player-fullscreen', 'false');
+        // video.setAttribute('crossorigin', 'anonymous');
 
-        _this.video = video;
         // initialize video
 
         Object.assign(_this.video, {
-            width: _this.config.width,
-            height: _this.config.height,
+            src: src,
+            // width: this.config.width,
+            // height: this.config.height,
             loop: _this.config.loop
         });
-        // initialize camera
-        var camera = _this.camera = new THREE.PerspectiveCamera(_this.config.cameraFOV, _this.config.width / _this.config.height, 0.1, 1100);
-        // camera.target = new THREE.Vector3(0, 0, 0);
-        camera.zoom = _this.config.zoom;
-        // camera.rotation.reorder('YXZ');
-        camera.layers.enable(1);
+        var render_ = function render_() {
+            _this.initTexture();
+            _this.initCamera();
+            _this.initScene();
+            _this.createRenderer();
+            _this.onVideoResize();
+        };
+        var timeoutRender = function timeoutRender() {
+            setTimeout(render_, 1000);
+            video.removeEventListener('loadeddata', timeoutRender);
+        };
 
-        camera.target = new THREE.Vector3(0, 0, 0);
-        camera.rotation.reorder('YXZ');
-        camera.position.x = Math.PI / 2;
-
-        // camera.updateProjectionMatrix();
-        var cameraDummy = _this.cameraParent = new THREE.Object3D();
-        cameraDummy.add(camera);
-
-        var controls = _this.controls = new THREE.VRControls(camera);
-
-        // initialize renderer
-        var renderer = _this.renderer = new THREE.WebGLRenderer({ antialias: false }); // 关闭抗锯齿以提高性能
-        // renderer.setClearColor(0x000000, 0);
-        renderer.setPixelRatio(window.devicePixelRatio);
-
-        container.appendChild(renderer.domElement);
-        //  effect
-
-        var effect = _this.effect = new THREE.VREffect(renderer);
-        // Disable eye separation.
-        effect.scale = 0;
-        effect.setSize(_this.video.width, _this.video.height);
-
-        // Present submission of frames automatically. This is done manually in
-        // submitFrame().
-        effect.autoSubmitFrame = true;
-
-        // initialize scene
-        var scene = _this.scene = new THREE.Scene();
-        var photoGroup = new THREE.Object3D();
-        photoGroup.name = 'photo';
-        scene.add(photoGroup);
-        scene.add(camera);
-        _this.onVideoResize();
+        var onPlay = function onPlay() {
+            _this.loopRender();
+            video.removeEventListener('play', onPlay);
+        };
+        video.addEventListener('play', onPlay);
+        // video.addEventListener('canplaythrough', resolve);
+        video.addEventListener('loadeddata', timeoutRender);
+        video.load();
         return _this;
     }
 
     _createClass(Player, [{
-        key: 'onVideoResize',
-        value: function onVideoResize() {
-            this.camera.aspect = this.video.width / this.video.height;
-            this.camera.updateProjectionMatrix();
-            this.renderer.setSize(this.video.width, this.video.height);
-        }
-    }, {
-        key: 'load',
-        value: function load(url) {
-            var _this2 = this;
+        key: 'createRenderer',
+        value: function createRenderer() {
+            // initialize renderer
+            var renderer = this.renderer = new THREE.WebGLRenderer({ antialias: false }); // 关闭抗锯齿以提高性能
+            // renderer.setClearColor(0x000000, 0);
+            renderer.setPixelRatio(window.devicePixelRatio);
 
-            return new Promise(function (resolve, reject) {
-                var video = _this2.video;
-                video.src = url;
-                video.addEventListener('canplaythrough', resolve);
-                video.addEventListener('loadeddata', resolve);
-                // const hls = new Hls();
-                // hls.loadSource(url);
-                // hls.attachMedia(video);
-                // hls.on(Hls.Events.MANIFEST_PARSED, resolve);
-                video.addEventListener('loadedmetadata', function () {
-                    _this2.emit('timeupdate', {
-                        currentTime: video.currentTime,
-                        duration: video.duration
-                    });
-                });
-                video.addEventListener('error', reject);
-                video.load();
-                var render_ = function render_() {
-                    _this2.createSphereRenderer();
-                    _this2.loopRender();
-                    video.removeEventListener('play', render_);
-                };
-                video.addEventListener('play', render_);
-                // render_();
-            }).then(function () {
-                return _this2.emit('load', _this2.video);
-            })
-            // .then(() => this.createSphereRenderer())
-            // .then(() => this.loopRender())
-            .catch(function (e) {
-                return _this2.emit('error', e);
-            });
+            //  effect
+            this.controls = new THREE.VRControls(this.camera);
+            var effect = this.effect = new THREE.VREffect(renderer);
+            // Disable eye separation.
+            effect.scale = 0;
+            effect.setSize(this.video.width, this.video.height);
+
+            // Present submission of frames automatically. This is done manually in
+            // submitFrame().
+            // effect.autoSubmitFrame = true;
+
+            this.container.appendChild(renderer.domElement);
         }
     }, {
-        key: 'createSphereRenderer',
-        value: function createSphereRenderer() {
+        key: 'initCamera',
+        value: function initCamera() {
+            // initialize camera
+            var camera = this.camera = new THREE.PerspectiveCamera(this.config.cameraFOV, this.config.width / this.config.height, 0.1, 1100);
+            // camera.target = new THREE.Vector3(0, 0, 0);
+            camera.zoom = this.config.zoom;
+            // camera.rotation.reorder('YXZ');
+            camera.layers.enable(1);
+
+            camera.target = new THREE.Vector3(0, 0, 0);
+            camera.rotation.reorder('YXZ');
+            // camera.position.x = (Math.PI / 2);
+
+            // camera.updateProjectionMatrix();
+            // const cameraDummy = this.cameraParent = new THREE.Object3D();
+            // cameraDummy.add(camera);
+        }
+    }, {
+        key: 'initScene',
+        value: function initScene() {
+            // initialize scene
+            var scene = this.scene = new THREE.Scene();
+            // const photoGroup = new THREE.Object3D();
+            // photoGroup.name = 'photo';
+            // scene.add(photoGroup);
+            scene.add(this.camera);
+
+            // const sphereLeft = createSphere(texture),
+            //     sphereRight = createSphere(texture);
+            //
+            // sphereLeft.layers.set(1); // leftEye 1 rightEye 2
+            // sphereLeft.eye = 1;
+            // sphereRight.layers.set(2);
+            // sphereRight.eye = 2;
+            scene.add(this.createSphere());
+            // this.scene.getObjectByName('photo').children = [sphereLeft, sphereRight];
+        }
+    }, {
+        key: 'initTexture',
+        value: function initTexture() {
             // texture
             var texture = this.texture = new THREE.VideoTexture(this.video);
             texture.minFilter = THREE.LinearFilter;
             texture.magFilter = THREE.LinearFilter;
             texture.format = THREE.RGBFormat;
             texture.generateMipmaps = false;
-            texture.needsUpdate = true;
+            // texture.needsUpdate = true;
 
             texture.flipY = false;
+        }
+    }, {
+        key: 'onVideoResize',
+        value: function onVideoResize() {
+            this.video.width = window.innerWidth;
+            this.video.height = window.innerHeight;
+            this.camera.aspect = this.video.width / this.video.height;
+            this.camera.updateProjectionMatrix();
+            this.renderer.setSize(this.video.width, this.video.height);
+        }
+    }, {
+        key: 'createSphere',
+        value: function createSphere(config) {
+            var texture = this.texture;
+            config = config || {};
+            var p = {
+                scaleX: config.scaleX || 1,
+                scaleY: config.scaleY || 1,
+                offsetX: config.offsetX || 0,
+                offsetY: config.offsetY || 0,
+                phiStart: config.phiStart || Math.PI / 180 * 90,
+                phiLength: config.phiLength || Math.PI * 2,
+                thetaStart: config.thetaStart || 0,
+                thetaLength: config.thetaLength || Math.PI
+            };
 
-            function createPhotosphere_(texture, config) {
-                config = config || {};
-                var p = {
-                    scaleX: config.scaleX || 1,
-                    scaleY: config.scaleY || 1,
-                    offsetX: config.offsetX || 0,
-                    offsetY: config.offsetY || 0,
-                    phiStart: config.phiStart || Math.PI / 180 * 90,
-                    phiLength: config.phiLength || Math.PI * 2,
-                    thetaStart: config.thetaStart || 0,
-                    thetaLength: config.thetaLength || Math.PI
-                };
+            var geometry = new THREE.SphereBufferGeometry(500, 64, 44);
+            geometry.scale(-1, 1, 1);
+            // geometry.applyMatrix(new THREE.Matrix4().makeScale(-1, 1, 1));
+            // const uvs = geometry.faceVertexUvs[0];
+            // for (let i = 0; i < uvs.length; i++) {
+            //     for (let j = 0; j < 3; j++) {
+            //         uvs[i][j].x *= p.scaleX;
+            //         uvs[i][j].x += p.offsetX;
+            //         uvs[i][j].y *= p.scaleY;
+            //         uvs[i][j].y += p.offsetY;
+            //     }
+            // }
+            var equirectFrag = 'uniform sampler2D tEquirect;\nuniform float tFlip;\nvarying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvec3 direction = normalize( vWorldPosition );\n\tvec2 sampleUV;\n\tsampleUV.y = saturate( tFlip * direction.y * -0.5 + 0.5 );\n\tsampleUV.x = atan( direction.z, direction.x ) * RECIPROCAL_PI2 + 0.5;\n\tgl_FragColor = texture2D( tEquirect, sampleUV ).bgra;\n}\n';
 
-                var geometry = new THREE.SphereBufferGeometry(200, 64, 44, p.phiStart, p.phiLength, p.thetaStart, p.thetaLength);
-                // geometry.scale(-1, 1, 1);
-                geometry.applyMatrix(new THREE.Matrix4().makeScale(-1, 1, 1));
-                // const uvs = geometry.faceVertexUvs[0];
-                // for (let i = 0; i < uvs.length; i++) {
-                //     for (let j = 0; j < 3; j++) {
-                //         uvs[i][j].x *= p.scaleX;
-                //         uvs[i][j].x += p.offsetX;
-                //         uvs[i][j].y *= p.scaleY;
-                //         uvs[i][j].y += p.offsetY;
-                //     }
-                // }
-                var equirectFrag = 'uniform sampler2D tEquirect;\nuniform float tFlip;\nvarying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvec3 direction = normalize( vWorldPosition );\n\tvec2 sampleUV;\n\tsampleUV.y = saturate( tFlip * direction.y * -0.5 + 0.5 );\n\tsampleUV.x = atan( direction.z, direction.x ) * RECIPROCAL_PI2 + 0.5;\n\tgl_FragColor = texture2D( tEquirect, sampleUV ).bgra;\n}\n';
+            var equirectVert = 'varying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvWorldPosition = transformDirection( position, modelMatrix );\n\t#include <begin_vertex>\n\t#include <project_vertex>\n}\n';
 
-                var equirectVert = 'varying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvWorldPosition = transformDirection( position, modelMatrix );\n\t#include <begin_vertex>\n\t#include <project_vertex>\n}\n';
+            var uniforms = {
+                tEquirect: { value: texture },
+                tFlip: { value: 1 }
+            };
 
-                var uniforms = {
-                    tEquirect: { value: texture },
-                    tFlip: { value: 1 }
-                };
-
-                var material = new THREE.ShaderMaterial({
-                    uniforms: uniforms,
-                    vertexShader: equirectVert,
-                    fragmentShader: equirectFrag
-                });
-                // const material = new THREE.MeshBasicMaterial({ map: texture ,  overdraw: 0.5});
-
-                // const material = new THREE.ShaderMaterial({
-                //   uniforms: {
-                //       texture: { value: texture }
-                //   },
-                //   vertexShader: [
-                //       'varying vec2 vUV;',
-                //       'void main() {',
-                //       '	vUV = vec2( uv.x, uv.y );',
-                //       '	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );',
-                //       '}'
-                //   ].join('\n'),
-                //   fragmentShader: [
-                //       'uniform sampler2D texture;',
-                //       'varying vec2 vUV;',
-                //       'void main() {',
-                //       ' gl_FragColor = texture2D( texture, vUV  ).bgra;',
-                //       '}'
-                //   ].join('\n')
-                // });
-                // const material = new THREE.MeshLambertMaterial({map: texture});
-                var out = new THREE.Mesh(geometry, material);
-                // out.visible = false;
-                // out.renderOrder = -1;
-                return out;
-            }
-
-            var sphereLeft = createPhotosphere_(texture),
-                sphereRight = createPhotosphere_(texture);
-
-            sphereLeft.layers.set(1); // leftEye 1 rightEye 2
-            sphereLeft.eye = 1;
-            sphereRight.layers.set(2);
-            sphereRight.eye = 2;
-
-            this.scene.getObjectByName('photo').children = [sphereLeft, sphereRight];
+            var material = new THREE.ShaderMaterial({
+                uniforms: uniforms,
+                vertexShader: equirectVert,
+                fragmentShader: equirectFrag
+            });
+            // const material = new THREE.MeshBasicMaterial({ map: texture ,  overdraw: 0.5});
+            // const material = new THREE.ShaderMaterial({
+            //   uniforms: {
+            //       texture: { value: texture }
+            //   },
+            //   vertexShader: [
+            //       'varying vec2 vUV;',
+            //       'void main() {',
+            //       '	vUV = vec2( uv.x, uv.y );',
+            //       '	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );',
+            //       '}'
+            //   ].join('\n'),
+            //   fragmentShader: [
+            //       'uniform sampler2D texture;',
+            //       'varying vec2 vUV;',
+            //       'void main() {',
+            //       ' gl_FragColor = texture2D( texture, vUV  ).bgra;',
+            //       '}'
+            //   ].join('\n')
+            // });
+            // const material = new THREE.MeshLambertMaterial({map: texture});
+            var out = new THREE.Mesh(geometry, material);
+            // out.visible = false;
+            // out.renderOrder = -1;
+            return out;
         }
     }, {
         key: 'destroy',
@@ -887,33 +879,24 @@ var Player = function (_EventEmitter) {
     }, {
         key: 'loopRender',
         value: function loopRender() {
-            requestAnimationFrame(this.loopRender.bind(this));
-            try {
-                this.controls.update();
-                this.effect.render(this.scene, this.camera);
-            } catch (e) {
-                console.error(e);
-            }
+            var _this2 = this;
+
+            var loop = function loop() {
+                requestAnimationFrame(loop);
+                var now = new Date().getTime();
+                if (now - _this2.lastRefresh >= 30) {
+                    _this2.lastRefresh = now;
+                    _this2.texture.needsUpdate = true;
+                }
+                try {
+                    _this2.controls.update();
+                    _this2.effect.render(_this2.scene, _this2.camera);
+                } catch (e) {
+                    console.error(e);
+                }
+            };
+            loop();
         }
-
-        // updateCameraPosition(x, y, z) {
-        //   this.camera.position.x = x;
-        //   this.camera.position.y = y;
-        //   this.camera.position.z = z;
-        //   this.camera.lookAt(this.camera.target);
-        //   this.render();
-        // }
-
-        // updateCameraPositionByDeg(theta, phi) {
-        //   theta = THREE.Math.degToRad(theta);
-        //   phi = THREE.Math.degToRad(90 - Math.max(-85, Math.min(85, phi)));
-        //   this.updateCameraPosition(
-        //           this.config.distance * Math.sin(phi) * Math.cos(theta),
-        //           this.config.distance * Math.cos(phi),
-        //           this.config.distance * Math.sin(phi) * Math.sin(theta)
-        //       );
-        // }
-
     }]);
 
     return Player;

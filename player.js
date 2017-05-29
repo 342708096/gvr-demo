@@ -624,14 +624,15 @@ vrDisplays;
     };
 };
 class Player extends EventEmitter {
-  constructor(container, video, config) {
+  constructor(src, container, config) {
     super();
-    container = container || window.document.body;
+      this.lastRefresh = 0;
+    this.container = container || window.document.body;
     // initialize config
     this.config = {
         distance: 500,
-        width: 640,
-        height: 360,
+        width: window.innerWidth,
+        height: window.innerHeight,
         loop: true,
         zoom: 1,
         cameraFOV: 50,
@@ -646,119 +647,126 @@ class Player extends EventEmitter {
     };
     Object.assign(this.config, config || {});
 
-    if (!video) {
-      video = this.video = document.createElement('video');
+
+      const video = this.video = document.createElement('video');
       video.setAttribute('preload', 'auto');
       video.setAttribute('x5-video-player-type', 'h5');
       video.setAttribute('webkit-playsinline', 'true');
-      video.setAttribute('x-webkit-airplay', 'true');
+      video.setAttribute('x-webkit-airplay', 'allow');
       video.setAttribute('playsinline', 'true');
-      video.setAttribute('x5-video-player-fullscreen', 'true');
-      video.setAttribute('crossorigin', 'anonymous');
-    }
+      video.setAttribute('x5-video-player-fullscreen', 'false');
+      // video.setAttribute('crossorigin', 'anonymous');
 
-    this.video = video;
         // initialize video
 
     Object.assign(this.video, {
-      width: this.config.width,
-      height: this.config.height,
+        src,
+      // width: this.config.width,
+      // height: this.config.height,
       loop: this.config.loop,
             // preload : "metadata"
     });
-        // initialize camera
-    const camera = this.camera = new THREE.PerspectiveCamera(this.config.cameraFOV, this.config.width / this.config.height, 0.1, 1100);
-    // camera.target = new THREE.Vector3(0, 0, 0);
-    camera.zoom = this.config.zoom;
-    // camera.rotation.reorder('YXZ');
-    camera.layers.enable(1);
-
-    camera.target = new THREE.Vector3( 0, 0, 0 );
-    camera.rotation.reorder('YXZ');
-    camera.position.x = (Math.PI / 2);
-
-    // camera.updateProjectionMatrix();
-    const cameraDummy = this.cameraParent = new THREE.Object3D();
-    cameraDummy.add(camera);
-
-    const controls = this.controls = new THREE.VRControls(camera);
-
-    // initialize renderer
-    const renderer = this.renderer = new THREE.WebGLRenderer({ antialias: false }); // 关闭抗锯齿以提高性能
-    // renderer.setClearColor(0x000000, 0);
-    renderer.setPixelRatio(window.devicePixelRatio);
-
-    container.appendChild(renderer.domElement);
-    //  effect
-
-    const effect = this.effect = new THREE.VREffect(renderer);
-    // Disable eye separation.
-    effect.scale = 0;
-    effect.setSize(this.video.width, this.video.height);
-
-    // Present submission of frames automatically. This is done manually in
-    // submitFrame().
-    effect.autoSubmitFrame = true;
-
-
-    // initialize scene
-    const scene = this.scene = new THREE.Scene();
-    const photoGroup = new THREE.Object3D();
-    photoGroup.name = 'photo';
-    scene.add(photoGroup);
-    scene.add(camera);
-    this.onVideoResize();
-  }
-  onVideoResize() {
-      this.camera.aspect = this.video.width / this.video.height;
-      this.camera.updateProjectionMatrix();
-      this.renderer.setSize(this.video.width, this.video.height);
-  }
-
-  load(url) {
-    return new Promise((resolve, reject) => {
-      const video = this.video;
-      video.src = url;
-      video.addEventListener('canplaythrough', resolve);
-      video.addEventListener('loadeddata', resolve);
-      // const hls = new Hls();
-      // hls.loadSource(url);
-      // hls.attachMedia(video);
-      // hls.on(Hls.Events.MANIFEST_PARSED, resolve);
-      video.addEventListener('loadedmetadata', () => {
-        this.emit('timeupdate', {
-          currentTime: video.currentTime,
-          duration: video.duration
-        });
-      });
-      video.addEventListener('error', reject);
-      video.load();
       const render_ = () => {
-        this.createSphereRenderer();
-        this.loopRender();
-        video.removeEventListener('play', render_);
+          this.initTexture();
+          this.initCamera();
+          this.initScene();
+          this.createRenderer();
+          this.onVideoResize();
       };
-      video.addEventListener('play', render_);
-      // render_();
-    })
-        .then(() => this.emit('load', this.video))
-        // .then(() => this.createSphereRenderer())
-        // .then(() => this.loopRender())
-        .catch((e) => this.emit('error', e));
+      const timeoutRender = () => {
+          setTimeout(render_, 1000);
+          video.removeEventListener('loadeddata', timeoutRender);
+      };
+
+      const onPlay = () => {
+          this.loopRender();
+          video.removeEventListener('play', onPlay);
+      };
+      video.addEventListener('play', onPlay);
+      // video.addEventListener('canplaythrough', resolve);
+      video.addEventListener('loadeddata', timeoutRender);
+      video.load();
   }
 
-  createSphereRenderer() {
-    // texture
+  createRenderer() {
+      // initialize renderer
+      const renderer = this.renderer = new THREE.WebGLRenderer({antialias: false}); // 关闭抗锯齿以提高性能
+      // renderer.setClearColor(0x000000, 0);
+      renderer.setPixelRatio(window.devicePixelRatio);
+
+      //  effect
+      this.controls = new THREE.VRControls(this.camera);
+      const effect = this.effect = new THREE.VREffect(renderer);
+      // Disable eye separation.
+      effect.scale = 0;
+      effect.setSize(this.video.width, this.video.height);
+
+      // Present submission of frames automatically. This is done manually in
+      // submitFrame().
+      // effect.autoSubmitFrame = true;
+
+      this.container.appendChild(renderer.domElement);
+  }
+
+  initCamera() {
+      // initialize camera
+      const camera = this.camera = new THREE.PerspectiveCamera(this.config.cameraFOV, this.config.width / this.config.height, 0.1, 1100);
+      // camera.target = new THREE.Vector3(0, 0, 0);
+      camera.zoom = this.config.zoom;
+      // camera.rotation.reorder('YXZ');
+      camera.layers.enable(1);
+
+      camera.target = new THREE.Vector3(0, 0, 0);
+      camera.rotation.reorder('YXZ');
+      // camera.position.x = (Math.PI / 2);
+
+      // camera.updateProjectionMatrix();
+      // const cameraDummy = this.cameraParent = new THREE.Object3D();
+      // cameraDummy.add(camera);
+  }
+
+  initScene() {
+      // initialize scene
+      const scene = this.scene = new THREE.Scene();
+      // const photoGroup = new THREE.Object3D();
+      // photoGroup.name = 'photo';
+      // scene.add(photoGroup);
+      scene.add(this.camera);
+
+      // const sphereLeft = createSphere(texture),
+      //     sphereRight = createSphere(texture);
+      //
+      // sphereLeft.layers.set(1); // leftEye 1 rightEye 2
+      // sphereLeft.eye = 1;
+      // sphereRight.layers.set(2);
+      // sphereRight.eye = 2;
+      scene.add(this.createSphere());
+      // this.scene.getObjectByName('photo').children = [sphereLeft, sphereRight];
+
+  }
+
+  initTexture() {
+      // texture
       const texture = this.texture = new THREE.VideoTexture(this.video);
       texture.minFilter = THREE.LinearFilter;
       texture.magFilter = THREE.LinearFilter;
       texture.format = THREE.RGBFormat;
       texture.generateMipmaps = false;
-      texture.needsUpdate = true;
+      // texture.needsUpdate = true;
 
       texture.flipY = false;
+  }
 
-      function createPhotosphere_(texture, config) {
+  onVideoResize() {
+      this.video.width = window.innerWidth;
+      this.video.height = window.innerHeight;
+      this.camera.aspect = this.video.width / this.video.height;
+      this.camera.updateProjectionMatrix();
+      this.renderer.setSize(this.video.width, this.video.height);
+  }
+
+  createSphere(config) {
+        const texture = this.texture;
         config = config || {};
         const p = {
           scaleX: config.scaleX || 1,
@@ -771,10 +779,9 @@ class Player extends EventEmitter {
           thetaLength: config.thetaLength || Math.PI
         };
 
-        const geometry = new THREE.SphereBufferGeometry(200, 64, 44,
-            p.phiStart, p.phiLength, p.thetaStart, p.thetaLength);
-          // geometry.scale(-1, 1, 1);
-        geometry.applyMatrix(new THREE.Matrix4().makeScale(-1, 1, 1));
+        const geometry = new THREE.SphereBufferGeometry(500, 64, 44);
+          geometry.scale(-1, 1, 1);
+        // geometry.applyMatrix(new THREE.Matrix4().makeScale(-1, 1, 1));
         // const uvs = geometry.faceVertexUvs[0];
         // for (let i = 0; i < uvs.length; i++) {
         //     for (let j = 0; j < 3; j++) {
@@ -799,7 +806,6 @@ class Player extends EventEmitter {
           fragmentShader: equirectFrag
         });
         // const material = new THREE.MeshBasicMaterial({ map: texture ,  overdraw: 0.5});
-
         // const material = new THREE.ShaderMaterial({
         //   uniforms: {
         //       texture: { value: texture }
@@ -824,17 +830,6 @@ class Player extends EventEmitter {
         // out.visible = false;
         // out.renderOrder = -1;
         return out;
-      }
-
-      const sphereLeft = createPhotosphere_(texture),
-          sphereRight = createPhotosphere_(texture);
-
-      sphereLeft.layers.set(1); // leftEye 1 rightEye 2
-      sphereLeft.eye = 1;
-      sphereRight.layers.set(2);
-      sphereRight.eye = 2;
-
-      this.scene.getObjectByName('photo').children = [sphereLeft, sphereRight];
   }
 
   destroy() {
@@ -848,32 +843,21 @@ class Player extends EventEmitter {
   }
 
   loopRender() {
-    requestAnimationFrame(this.loopRender.bind(this));
-    try {
-      this.controls.update();
-      this.effect.render(this.scene, this.camera);
-    } catch (e) {
-      console.error(e);
-    }
+      const loop = () => {
+          requestAnimationFrame(loop);
+          const now = new Date().getTime();
+          if (now - this.lastRefresh >= 30) {
+              this.lastRefresh = now;
+              this.texture.needsUpdate = true;
+          }
+          try {
+              this.controls.update();
+              this.effect.render(this.scene, this.camera);
+          } catch (e) {
+              console.error(e);
+          }
+      };
+      loop();
   }
-
-  // updateCameraPosition(x, y, z) {
-  //   this.camera.position.x = x;
-  //   this.camera.position.y = y;
-  //   this.camera.position.z = z;
-  //   this.camera.lookAt(this.camera.target);
-  //   this.render();
-  // }
-
-  // updateCameraPositionByDeg(theta, phi) {
-  //   theta = THREE.Math.degToRad(theta);
-  //   phi = THREE.Math.degToRad(90 - Math.max(-85, Math.min(85, phi)));
-  //   this.updateCameraPosition(
-  //           this.config.distance * Math.sin(phi) * Math.cos(theta),
-  //           this.config.distance * Math.cos(phi),
-  //           this.config.distance * Math.sin(phi) * Math.sin(theta)
-  //       );
-  // }
-
 }
 
